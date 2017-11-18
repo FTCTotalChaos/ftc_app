@@ -31,8 +31,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 /**
@@ -63,8 +65,17 @@ public class CreedTeleOp extends OpMode {
     public DcMotor lb;
     public Servo rg;
     public Servo lg;
+    public Servo rjk;
+    public Servo ljk;
+    public Servo rextention;
+    public Servo lextentions;
     public DcMotor rs;
     public DcMotor ls;
+    double rightposition = -0.5;
+    double leftposition = 0.5;
+    double rightposition2 = 0.15;
+    double leftposition2 = 1;
+    double position3 = 0;
 
 
 
@@ -79,8 +90,16 @@ public class CreedTeleOp extends OpMode {
         ls = hardwareMap.get(DcMotor.class, "ls");
         rg = hardwareMap.get(Servo.class, "rg");
         lg = hardwareMap.get(Servo.class, "lg");
-
-
+        rjk = hardwareMap.get(Servo.class, "rjk");
+        ljk = hardwareMap.get(Servo.class, "ljk");
+        rextention = hardwareMap.get(Servo.class, "re");
+        lextentions = hardwareMap.get(Servo.class, "le");
+        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        rjk.setPosition(rightposition2);
+        ljk.setPosition(leftposition2);
+        lg.setPosition(leftposition);
+        rg.setPosition(rightposition);
     }
 
     /*
@@ -106,7 +125,8 @@ public class CreedTeleOp extends OpMode {
         double leftJoy;
         double rightJoy;
         double sweeper;
-        double position = 0;
+
+
         leftJoy = gamepad1.left_stick_y*0.5;
         rightJoy = gamepad1.right_stick_y*0.5;
         sweeper = gamepad2.right_trigger;
@@ -114,26 +134,56 @@ public class CreedTeleOp extends OpMode {
         ls.setPower(sweeper);
 
         if (Math.abs(leftJoy - rightJoy) > 0.2){
-            lf.setPower(-(rightJoy*2));
-            lb.setPower(-(rightJoy*2));
-            rf.setPower(leftJoy*2);
-            rb.setPower(leftJoy*2);
+            rf.setPower(rightJoy*2);
+            rb.setPower(rightJoy*2);
+            lf.setPower(leftJoy*2);
+            lb.setPower(leftJoy*2);
         }
         else {
-            lf.setPower(-(rightJoy));
-            lb.setPower(-(rightJoy));
-            rf.setPower(leftJoy);
-            rb.setPower(leftJoy);
+            rf.setPower(rightJoy);
+            rb.setPower(rightJoy);
+            lf.setPower(leftJoy);
+            lb.setPower(leftJoy);
         }
         if (gamepad2.right_bumper) {
-            position = position + 0.05;
-            rg.setPosition(position);
-            lg.setPosition(position);
+            rightposition = rightposition + 0.03;
+            leftposition =  leftposition + 0.03;
+            rg.setPosition(rightposition);
+            lg.setPosition(leftposition);
         }
         else if (gamepad2.left_bumper) {
-            position = position - 0.05;
-            rg.setPosition(position);
-            lg.setPosition(position);
+            rightposition = rightposition - 0.03;
+            leftposition =  leftposition - 0.03;
+            rg.setPosition(rightposition);
+            lg.setPosition(leftposition);
+        }
+        if (gamepad2.y) {
+            rightposition2 = rightposition2 + 0.05;
+            leftposition2 = leftposition2 + 0.05;
+            rjk.setPosition(rightposition2 );
+            ljk.setPosition(leftposition2 + 0.65);
+        }
+        else if (gamepad2.a) {
+            rightposition2 = rightposition2 - 0.05;
+            leftposition2 = leftposition2 - 0.05;
+            rjk.setPosition(rightposition2);
+            ljk.setPosition(leftposition2 + 0.65);
+        }
+        if (gamepad2.b) {
+            position3 = position3 + 0.05;
+            rextention.setPosition(-position3);
+            lextentions.setPosition(position3);
+            telemetry.addData("Right Extention Position", rextention.getPosition());
+            telemetry.addData("Left Extention Position", lextentions.getPosition());
+            telemetry.update();
+        }
+        else if (gamepad2.x) {
+            position3 = position3 - 0.05;
+            rextention.setPosition(-position3);
+            lextentions.setPosition(position3);
+            telemetry.addData("Right Extention Position", rextention.getPosition());
+            telemetry.addData("Left Extention Position", lextentions.getPosition());
+            telemetry.update();
         }
         // Pause for 40 mS each cycle = update 25 times a second.
     }
