@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.Autonomous;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -33,25 +31,13 @@ import java.util.Vector;
  * <p>
  *Enables control of the robot via the gamepad
  */
-public abstract class NewBaseAutoOp extends OpMode {
+public abstract class NoNavXOp extends OpMode {
     DcMotor leftFront;
     DcMotor rightFront;
     DcMotor leftBack;
     DcMotor rightBack;
     DcMotor armTwist;
     Servo jewelKnock;
-    Servo rjk;
-    Servo ljk;
-    Servo rextention;
-    Servo lextentions;
-    CRServo rg;
-    CRServo lg;
-    DcMotor rs;
-    DcMotor ls;
-    double position = 0;
-    double rightposition2 = 0.35;
-    double leftposition2 = 1;
-    double position3 = 0;
     private final int NAVX_DIM_I2C_PORT = 0;
     private AHRS navx_device;
     private navXPIDController yawPIDController;
@@ -84,10 +70,9 @@ public abstract class NewBaseAutoOp extends OpMode {
     final static int TURNTOANGLE = 6;
     final static int JEWELKNOCK = 7;
     final static int VUCHECK = 8;
-    final static int TURNEXTENTION = 9;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
-    final static double GEAR_RATIO = 3;
+    final static double GEAR_RATIO = 1;
     final static double WHEEL_DIAMETER = 3.6;
     final static double CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
     //Start step types
@@ -97,6 +82,8 @@ public abstract class NewBaseAutoOp extends OpMode {
     final static int RANGE = 4;
     final static int WAITFORTOUCH = 5;
     final static int BACK = 6;
+    final static int BLUE = 7;
+    final static int RED = 8;
     final static int WAIT = 9;
     final static int MOVEARM = 10;
     final static int FORWARD = 11;
@@ -110,10 +97,7 @@ public abstract class NewBaseAutoOp extends OpMode {
     final static int BLOCKR = 3;
     int block = BLOCKN;
     int counter = 0;
-    final static int BLUE = 0;
-    final static int RED = 1;
-    final static int NOCOLOR = 2;
-    int colorVal = NOCOLOR;
+
     public class Step {
         public double distance;
         public double leftPower;
@@ -124,11 +108,9 @@ public abstract class NewBaseAutoOp extends OpMode {
         public double armPosition;
         public double turnAngle;
         public int sType;
-        public int colorType;
-        public Step(double dist, double left, double right, int stepType, int angle, int col) {
+        public Step(double dist, double left, double right, int stepType, int angle) {
             distance = dist;
             sType = stepType;
-            colorType = col;
             if (stepType == MOVE){
                 rightCounts = convertDistance(distance);
                 leftCounts = rightCounts;
@@ -151,6 +133,18 @@ public abstract class NewBaseAutoOp extends OpMode {
                 rightPower = -right;
             }
             else if(stepType == BACK){
+                rightCounts = convertDistance(distance);
+                leftCounts = rightCounts;
+                leftPower = -left;
+                rightPower = -right;
+            }
+            else if(stepType == BLUE){
+                rightCounts = convertDistance(distance);
+                leftCounts = rightCounts;
+                leftPower = -left;
+                rightPower = -right;
+            }
+            else if(stepType == RED){
                 rightCounts = convertDistance(distance);
                 leftCounts = rightCounts;
                 leftPower = -left;
@@ -199,19 +193,10 @@ public abstract class NewBaseAutoOp extends OpMode {
             rightFront = hardwareMap.get(DcMotor.class, "rf");
             leftBack = hardwareMap.get(DcMotor.class, "lb");
             rightBack = hardwareMap.get(DcMotor.class, "rb");
+            jewelKnock = hardwareMap.get(Servo.class , "jk");
             color = hardwareMap.get(ColorSensor.class , "cs");
-            rs = hardwareMap.get(DcMotor.class, "rs");
-            ls = hardwareMap.get(DcMotor.class, "ls");
-            rg = hardwareMap.get(CRServo.class, "rg");
-            lg = hardwareMap.get(CRServo.class, "lg");
-            rjk = hardwareMap.get(Servo.class, "rjk");
-            ljk = hardwareMap.get(Servo.class, "ljk");
-            rextention = hardwareMap.get(Servo.class, "re");
-            lextentions = hardwareMap.get(Servo.class, "le");
             rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
             rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-            rjk.setPosition(rightposition2);
-            ljk.setPosition(leftposition2);
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
                     NAVX_DIM_I2C_PORT,
                     AHRS.DeviceDataType.kProcessedData,
@@ -302,46 +287,6 @@ public abstract class NewBaseAutoOp extends OpMode {
             }
             else {
                 setMotorPower(currentStep.leftPower, currentStep.rightPower);
-                navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
-                try {
-                    if ( yawPIDController.waitForNewUpdate(yawPIDResult, DEVICE_TIMEOUT_MS ) ) {
-                        if ( yawPIDResult.isOnTarget() ) {
-                            telemetry.addData("Yaw: isOntarget","");
-                            telemetry.addData("Left Front", leftFront.getPower());
-                            telemetry.addData("Left Back", leftBack.getPower());
-                            telemetry.addData("Right Front", rightFront.getPower());
-                            telemetry.addData("Right Back", rightBack.getPower());
-                            telemetry.update();
-                            setMotorPower(currentStep.leftPower, currentStep.rightPower);
-
-                        } else {
-                            double output = yawPIDResult.getOutput();
-                            telemetry.addData("Yaw:", output);
-                            telemetry.update();
-                            if ( output < 0 ) {
-                                setMotorPower(currentStep.leftPower + output/10, currentStep.rightPower - output/10);
-                                telemetry.addData("Left Front", leftFront.getPower());
-                                telemetry.addData("Left Back", leftBack.getPower());
-                                telemetry.addData("Right Front", rightFront.getPower());
-                                telemetry.addData("Right Back", rightBack.getPower());
-                                telemetry.update();
-
-                            } else {
-                                setMotorPower(currentStep.leftPower - output/10, currentStep.rightPower + output/10);
-                                telemetry.addData("Left Front", leftFront.getPower());
-                                telemetry.addData("Left Back", leftBack.getPower());
-                                telemetry.addData("Right Front", rightFront.getPower());
-                                telemetry.addData("Right Back", rightBack.getPower());
-                                telemetry.update();
-
-                            }
-                        }
-                    }
-                }
-                catch(InterruptedException e){
-
-                }
-
             }
         }
         else if (state == TURNTOANGLE){
@@ -378,12 +323,6 @@ public abstract class NewBaseAutoOp extends OpMode {
         else if (state == JEWELKNOCK){
             if (counter < 50){
                 counter ++;
-                if (currentStep.colorType == RED){
-                    rjk.setPosition(0.75);
-                }
-                else if(currentStep.colorType == BLUE){
-                    ljk.setPosition(-0.25);
-                }
                 telemetry.addData("TWO CHAINZZZZ:", jewelKnock.getPosition());
                 telemetry.update();
             }
@@ -394,67 +333,32 @@ public abstract class NewBaseAutoOp extends OpMode {
         }
         else if (state == DETECTCOLOR){
             if (color.red()>1){
-                colorVal = RED;
+                resetEncoders();
+                initializeNavX(TARGET_ANGLE_DEGREES);
                 telemetry.addData("I'm getting red",color.red());
                 telemetry.update();
-                state = TURNEXTENTION;
+                state = WAITFORRESETENCODERS;
 
             }
             else if (color.blue()>1){
-                colorVal = BLUE;
+                resetEncoders();
+                state = WAITFORRESETENCODERS;
+                initializeNavX(TARGET_ANGLE_DEGREES);
                 telemetry.addData("I'm getting blue",color.blue());
                 telemetry.update();
-                state = TURNEXTENTION;
+                initializeNavX(TARGET_ANGLE_DEGREES);
+                currentStep.distance = currentStep.distance *-1;
+                currentStep.leftPower = currentStep.leftPower*-1;
+                currentStep.rightPower = currentStep.rightPower*-1;
 
             }
             else if (counter > 300){
-                counter = 0;
                 nextStep();
             }
             else{
                 counter++;
-            }
-        }
-        else if (state == TURNEXTENTION){
-            if(currentStep.colorType == RED){
-                if (colorVal == BLUE){
-                    if (counter < 50) {
-                        rextention.setPosition(0);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
-                else if (colorVal == RED){
-                    if (counter < 50) {
-                        rextention.setPosition(1);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
-            }
-            else if(currentStep.colorType == BLUE){
-                if (colorVal == BLUE){
-                    if (counter < 50) {
-                        lextentions.setPosition(1);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
-                else if (colorVal == RED){
-                    if (counter < 50) {
-                        lextentions.setPosition(4.2);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
+                telemetry.addData("Red:", color.red());
+                telemetry.update();
             }
         }
         else if(state ==  VUCHECK){
@@ -528,7 +432,6 @@ public abstract class NewBaseAutoOp extends OpMode {
     }
 
     public boolean areCountsReached(int leftCounts, int rightCounts) {
-        telemetry.addData("Is it negative?",leftFront.getCurrentPosition());
         return ( Math.abs(leftFront.getCurrentPosition()) >= Math.abs(leftCounts) &&
                 Math.abs(rightFront.getCurrentPosition()) >= Math.abs(rightCounts) &&
                 Math.abs(leftBack.getCurrentPosition())>= Math.abs(leftCounts) &&
