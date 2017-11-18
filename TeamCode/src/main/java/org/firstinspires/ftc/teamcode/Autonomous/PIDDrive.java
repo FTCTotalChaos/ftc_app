@@ -23,7 +23,7 @@ public class PIDDrive extends NewBaseAutoOp {
 
     @Override
     public void initSteps(){
-        steps.add(new Step(7, 0.3, 0.3, MOVE, 0));
+        steps.add(new Step(10, 0.3, 0.3, RANGE, 0));
         //steps.add(new Step(3, 0.3 , 0.3, VUFORIA, 0));
         //steps.add(new Step(7, 0.1 , 0.1, MOVEARM,  0));
 

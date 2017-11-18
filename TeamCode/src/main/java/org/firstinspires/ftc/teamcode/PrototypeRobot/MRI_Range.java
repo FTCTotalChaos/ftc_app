@@ -29,7 +29,6 @@ public class MRI_Range extends OpMode {
     @Override
     public void loop() {
         range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-
         telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
         telemetry.addData("ODS", range1Cache[1] & 0xFF);
     }

@@ -6,6 +6,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.Vuforia;
@@ -47,6 +51,15 @@ public abstract class NewBaseAutoOp extends OpMode {
     VuforiaTrackable relicTemplate;
     VuforiaLocalizer.Parameters parameters;
     private ElapsedTime runtime = new ElapsedTime();
+    //range sensor values
+    byte[] range1Cache; //The read will return an array of bytes. They are stored in this variable
+
+    I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
+    public static final int RANGE1_REG_START = 0x04; //Register to start reading
+    public static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
+
+    public I2cDevice RANGE1;
+    public I2cDeviceSynch RANGE1Reader;
     //navx values
     private final byte NAVX_DEVICE_UPDATE_RATE_HZ = 50;
     private final double TARGET_ANGLE_DEGREES = 0.0;
@@ -71,6 +84,7 @@ public abstract class NewBaseAutoOp extends OpMode {
     final static int TURNTOANGLE = 6;
     final static int JEWELKNOCK = 7;
     final static int VUCHECK = 8;
+    final static int CHECKDIST = 9;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
     final static double GEAR_RATIO = 1;
@@ -195,6 +209,11 @@ public abstract class NewBaseAutoOp extends OpMode {
             leftBack = hardwareMap.get(DcMotor.class, "lb");
             rightBack = hardwareMap.get(DcMotor.class, "rb");
             jewelKnock = hardwareMap.get(Servo.class , "jk");
+            //range sensor init
+            RANGE1 = hardwareMap.i2cDevice.get("range");
+            RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+            RANGE1Reader.engage();
+
             color = hardwareMap.get(ColorSensor.class , "cs");
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
                     NAVX_DIM_I2C_PORT,
@@ -271,6 +290,9 @@ public abstract class NewBaseAutoOp extends OpMode {
             }
             else if(currentStep.sType == VUFORIA){
                 state = VUCHECK;
+            }
+            else if(currentStep.sType == RANGE){
+                state = CHECKDIST;
             }
         }
         else if( state == WAITFORRESETENCODERS) {
@@ -422,6 +444,11 @@ public abstract class NewBaseAutoOp extends OpMode {
             }
             telemetry.update();
 
+        }
+        else if (state == CHECKDIST){
+            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+            telemetry.addData("ODS", range1Cache[1] & 0xFF);
         }
         else if (state == FINISHED){
             leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
