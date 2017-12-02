@@ -71,8 +71,8 @@ public class CreedTeleOp extends OpMode {
     public Servo lextentions;
     public DcMotor rs;
     public DcMotor ls;
-    double rightposition = -0.5;
-    double leftposition = 0.5;
+    double rightposition = 0;
+    double leftposition = 0;
     double rightposition2 = 0.15;
     double leftposition2 = 1;
     double position3 = 0;
