@@ -67,15 +67,15 @@ public class CreedTeleOp extends OpMode {
     public Servo lg;
     public Servo rjk;
     public Servo ljk;
-    public Servo rextention;
-    public Servo lextentions;
+    //public Servo rextention;
+    //public Servo lextentions;
     public DcMotor rs;
     public DcMotor ls;
-    double rightposition = -0.5;
-    double leftposition = 0.5;
+    double rightposition = 0;
+    double leftposition = 1;
     double rightposition2 = 0.15;
     double leftposition2 = 1;
-    double position3 = 0;
+    //double position3 = 0;
 
 
 
@@ -92,8 +92,8 @@ public class CreedTeleOp extends OpMode {
         lg = hardwareMap.get(Servo.class, "lg");
         rjk = hardwareMap.get(Servo.class, "rjk");
         ljk = hardwareMap.get(Servo.class, "ljk");
-        rextention = hardwareMap.get(Servo.class, "re");
-        lextentions = hardwareMap.get(Servo.class, "le");
+        //rextention = hardwareMap.get(Servo.class, "re");
+        //lextentions = hardwareMap.get(Servo.class, "le");
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
         rjk.setPosition(rightposition2);
@@ -146,16 +146,22 @@ public class CreedTeleOp extends OpMode {
             lb.setPower(leftJoy);
         }
         if (gamepad2.right_bumper) {
-            rightposition = rightposition + 0.03;
-            leftposition =  leftposition + 0.03;
+            rightposition = rightposition + 0.2;
+            leftposition =  leftposition - 0.2;
             rg.setPosition(rightposition);
             lg.setPosition(leftposition);
+            telemetry.addData("Grab R", rg.getPosition());
+            telemetry.addData("Grab L", lg.getPosition());
+            telemetry.update();
         }
         else if (gamepad2.left_bumper) {
-            rightposition = rightposition - 0.03;
-            leftposition =  leftposition - 0.03;
+            rightposition = rightposition - 0.2;
+            leftposition =  leftposition + 0.2;
             rg.setPosition(rightposition);
             lg.setPosition(leftposition);
+            telemetry.addData("Grab R", rg.getPosition());
+            telemetry.addData("Grab L", lg.getPosition());
+            telemetry.update();
         }
         if (gamepad2.y) {
             rightposition2 = rightposition2 + 0.05;
@@ -169,7 +175,7 @@ public class CreedTeleOp extends OpMode {
             rjk.setPosition(rightposition2);
             ljk.setPosition(leftposition2 + 0.65);
         }
-        if (gamepad2.b) {
+        /*if (gamepad2.b) {
             position3 = position3 + 0.05;
             rextention.setPosition(-position3);
             lextentions.setPosition(position3);
@@ -185,6 +191,7 @@ public class CreedTeleOp extends OpMode {
             telemetry.addData("Left Extention Position", lextentions.getPosition());
             telemetry.update();
         }
+        */
         // Pause for 40 mS each cycle = update 25 times a second.
     }
 

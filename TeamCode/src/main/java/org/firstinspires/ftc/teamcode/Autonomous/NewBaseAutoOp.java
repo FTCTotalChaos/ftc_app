@@ -39,7 +39,6 @@ public abstract class NewBaseAutoOp extends OpMode {
     DcMotor leftBack;
     DcMotor rightBack;
     DcMotor armTwist;
-    Servo jewelKnock;
     Servo rjk;
     Servo ljk;
     Servo rextention;
@@ -49,7 +48,7 @@ public abstract class NewBaseAutoOp extends OpMode {
     DcMotor rs;
     DcMotor ls;
     double position = 0;
-    double rightposition2 = 0.35;
+    double rightposition2 = 0;
     double leftposition2 = 1;
     double position3 = 0;
     private final int NAVX_DIM_I2C_PORT = 0;
@@ -87,8 +86,8 @@ public abstract class NewBaseAutoOp extends OpMode {
     final static int TURNEXTENTION = 9;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
-    final static double GEAR_RATIO = 3;
-    final static double WHEEL_DIAMETER = 3.6;
+    final static double GEAR_RATIO = 0.3333;
+    final static double WHEEL_DIAMETER = 4;
     final static double CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
     //Start step types
     final static int MOVE = 1;
@@ -110,6 +109,8 @@ public abstract class NewBaseAutoOp extends OpMode {
     final static int BLOCKR = 3;
     int block = BLOCKN;
     int counter = 0;
+    int counter2 = 0;
+    int counter3 = 0;
     final static int BLUE = 0;
     final static int RED = 1;
     final static int NOCOLOR = 2;
@@ -282,8 +283,8 @@ public abstract class NewBaseAutoOp extends OpMode {
 
             }
             else if(currentStep.sType == MOVEARM){
-                jewelKnock.setPosition(0.7);
                 state = JEWELKNOCK;
+                initializeNavX(TARGET_ANGLE_DEGREES);
             }
             else if(currentStep.sType == VUFORIA){
                 state = VUCHECK;
@@ -319,7 +320,7 @@ public abstract class NewBaseAutoOp extends OpMode {
                             telemetry.addData("Yaw:", output);
                             telemetry.update();
                             if ( output < 0 ) {
-                                setMotorPower(currentStep.leftPower + output/10, currentStep.rightPower - output/10);
+                                setMotorPower(currentStep.leftPower - output/10, currentStep.rightPower + output/10);
                                 telemetry.addData("Left Front", leftFront.getPower());
                                 telemetry.addData("Left Back", leftBack.getPower());
                                 telemetry.addData("Right Front", rightFront.getPower());
@@ -327,7 +328,7 @@ public abstract class NewBaseAutoOp extends OpMode {
                                 telemetry.update();
 
                             } else {
-                                setMotorPower(currentStep.leftPower - output/10, currentStep.rightPower + output/10);
+                                setMotorPower(currentStep.leftPower + output/10, currentStep.rightPower - output/10);
                                 telemetry.addData("Left Front", leftFront.getPower());
                                 telemetry.addData("Left Back", leftBack.getPower());
                                 telemetry.addData("Right Front", rightFront.getPower());
@@ -376,43 +377,70 @@ public abstract class NewBaseAutoOp extends OpMode {
 
         }
         else if (state == JEWELKNOCK){
-            if (counter < 50){
-                counter ++;
-                if (currentStep.colorType == RED){
-                    rjk.setPosition(0.75);
+            if (counter < 10) {
+                counter++;
+                if (currentStep.colorType == RED) {
+                    rjk.setPosition(0.72);
+                } else if (currentStep.colorType == BLUE) {
+                    ljk.setPosition(0);
                 }
-                else if(currentStep.colorType == BLUE){
-                    ljk.setPosition(-0.25);
-                }
-                telemetry.addData("TWO CHAINZZZZ:", jewelKnock.getPosition());
+                telemetry.addData("TWO CHAINZZZZ:", rjk.getPosition());
                 telemetry.update();
             }
             else {
-                counter = 0;
                 state = DETECTCOLOR;
+                counter = 0;
             }
         }
         else if (state == DETECTCOLOR){
-            if (color.red()>1){
-                colorVal = RED;
-                telemetry.addData("I'm getting red",color.red());
-                telemetry.update();
-                state = TURNEXTENTION;
+            if (currentStep.colorType == RED) {
+                if (color.red() > 1) {
+                    colorVal = RED;
+                    telemetry.addData("I'm getting red", color.red());
+                    telemetry.update();
+                    state = WAITFORCOUNTS;
+                    setMotorPower(currentStep.leftPower,currentStep.rightPower);
 
-            }
-            else if (color.blue()>1){
-                colorVal = BLUE;
-                telemetry.addData("I'm getting blue",color.blue());
-                telemetry.update();
-                state = TURNEXTENTION;
 
+                } else if (color.blue() > 1) {
+                    colorVal = BLUE;
+                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.update();
+                    currentStep.turnAngle = currentStep.distance * -1;
+                    currentStep.leftPower = currentStep.leftPower * -1;
+                    currentStep.rightPower = currentStep.rightPower * -1;
+                    state = WAITFORCOUNTS;
+
+                } else if (counter > 300) {
+                    counter = 0;
+                    nextStep();
+                } else {
+                    telemetry.addData("Not getting anything", "");
+                    counter++;
+                }
             }
-            else if (counter > 300){
-                counter = 0;
-                nextStep();
-            }
-            else{
-                counter++;
+            else if (currentStep.colorType == BLUE){
+                if (color.blue() > 1) {
+                    colorVal = RED;
+                    telemetry.addData("I'm getting red", color.red());
+                    telemetry.update();
+                    state = WAITFORCOUNTS;
+
+                } else if (color.red() > 1) {
+                    colorVal = BLUE;
+                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.update();
+                    currentStep.turnAngle = currentStep.distance * -1;
+                    currentStep.leftPower = currentStep.leftPower * -1;
+                    currentStep.rightPower = currentStep.rightPower * -1;
+                    state = WAITFORCOUNTS;
+
+                } else if (counter > 300) {
+                    counter = 0;
+                    nextStep();
+                } else {
+                    counter++;
+                }
             }
         }
         else if (state == TURNEXTENTION){
