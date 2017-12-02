@@ -33,6 +33,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -56,21 +58,22 @@ public class MechWheelsOp extends OpMode {
     double armDelta = 0.01;
     boolean iSawDpadUpAlready = false;
     boolean iSawDpadDownAlready = false;
-    boolean iSawDpadUpAlreadyArm = false;
-    boolean iSawDpadDownAlreadyArm = false;
-    boolean iSawDpadLeftAlreadyWinch = false;
-    boolean iSawDpadRightAlreadyWinch = false;
-    DcMotor leftFront;
-    DcMotor rightFront;
-    DcMotor leftBack;
-    DcMotor rightBack;
-    DcMotor Sweeper;
-    DcMotor leftShooter;
-    DcMotor rightShooter;
-    DcMotor ballPopper;
-    CRServo pusherLeft;
-    CRServo pusherRight;
-    CRServo sweep;
+    public DcMotor rf;
+    public DcMotor lf;
+    public DcMotor rb;
+    public DcMotor lb;
+    public Servo rg;
+    public Servo lg;
+    public Servo rjk;
+    public Servo ljk;
+    //public Servo rextention;
+    //public Servo lextentions;
+    public DcMotor rs;
+    public DcMotor ls;
+    double rightposition = 0;
+    double leftposition = 1;
+    double rightposition2 = 0.15;
+    double leftposition2 = 1;
     final static double FAST = 1.0;
     final static double MED_FAST = 0.75;
     final static double MEDIUM = 0.5;
@@ -82,21 +85,24 @@ public class MechWheelsOp extends OpMode {
 
     public void init()
     {
-
-        leftFront = hardwareMap.get(DcMotor.class, "lf");
-        rightFront = hardwareMap.get(DcMotor.class, "rf");
-        leftBack = hardwareMap.get(DcMotor.class, "lb");
-        rightBack = hardwareMap.get(DcMotor.class, "rb");
-        Sweeper = hardwareMap.get(DcMotor.class, "swp");
-        rightShooter = hardwareMap.get(DcMotor.class, "rs");
-        leftShooter = hardwareMap.get(DcMotor.class,"ls");
-        pusherLeft = hardwareMap.get(CRServo.class, "left");
-        pusherRight = hardwareMap.get(CRServo.class,"right");
-        ballPopper = hardwareMap.get(DcMotor.class, "bp");
-        sweep = hardwareMap.get(CRServo.class, "sp");
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack.setDirection(DcMotor.Direction.REVERSE);
-        leftShooter.setDirection(DcMotor.Direction.REVERSE);
+        lf  = hardwareMap.get(DcMotor.class, "lf");
+        rf = hardwareMap.get(DcMotor.class, "rf");
+        lb = hardwareMap.get(DcMotor.class, "lb");
+        rb = hardwareMap.get(DcMotor.class, "rb");
+        rs = hardwareMap.get(DcMotor.class, "rs");
+        ls = hardwareMap.get(DcMotor.class, "ls");
+        rg = hardwareMap.get(Servo.class, "rg");
+        lg = hardwareMap.get(Servo.class, "lg");
+        rjk = hardwareMap.get(Servo.class, "rjk");
+        ljk = hardwareMap.get(Servo.class, "ljk");
+        //rextention = hardwareMap.get(Servo.class, "re");
+        //lextentions = hardwareMap.get(Servo.class, "le");
+        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        rjk.setPosition(rightposition2);
+        ljk.setPosition(leftposition2);
+        lg.setPosition(leftposition);
+        rg.setPosition(rightposition);
     }
 
     @Override
@@ -126,28 +132,6 @@ public class MechWheelsOp extends OpMode {
         mode = Range.clip(mode, 0.25, 0.75 );
 
 
-        if (gamepad2.dpad_up) {
-            if(!iSawDpadUpAlreadyArm) {
-                iSawDpadUpAlreadyArm = true;
-                armMode = armMode + 0.025;
-            }
-        }
-        else {
-            iSawDpadUpAlreadyArm = false;
-        }
-
-        if (gamepad2.dpad_down) {
-            if(!iSawDpadDownAlreadyArm) {
-                iSawDpadDownAlreadyArm = true;
-                armMode = armMode - 0.025;
-            }
-        }
-        else {
-            iSawDpadDownAlreadyArm = false;
-        }
-        armMode = Range.clip(armMode, 0.1, 1 );
-
-
 
         double forward = gamepad1.left_stick_y;
         double side = gamepad1.left_stick_x;
@@ -155,102 +139,68 @@ public class MechWheelsOp extends OpMode {
 
         if (side == 0 || forward == 0 || turn == 0) {
             if (Math.abs(forward) > Math.abs(side)) {
-                leftFront.setPower(forward);
-                leftBack.setPower(forward);
-                rightFront.setPower(forward);
-                rightBack.setPower(forward);
+                lf.setPower(forward);
+                lb.setPower(forward);
+                rf.setPower(forward);
+                rb.setPower(forward);
             }
             else if (Math.abs(side) > Math.abs(forward)) {
-                rightFront.setPower(side);
-                leftFront.setPower(-side);
-                rightBack.setPower(-side);
-                leftBack.setPower(side);
+                rf.setPower(side);
+                lf.setPower(-side);
+                rb.setPower(-side);
+                lb.setPower(side);
             }
-           /*
-           else if (forward >= 0.1 && forward <= 0.9 && side >= 0.1 && side <= 0.9){
-
-               leftFront.setPower(0.75);
-               leftBack.setPower(0);
-               rightBack.setPower(0.75);
-               rightFront.setPower(0);
-           }
-           else if (forward <= -0.1 && forward >= -0.9 && side <= -0.1 && side >= -0.9){
-               leftFront.setPower(-0.75);
-               leftBack.setPower(0);
-               rightBack.setPower(-0.75);
-               rightFront.setPower(0);
-           }
-           else if (forward <= -0.1 && forward >= -0.9 && side >= 0.1 && side <= 0.9){
-               leftFront.setPower(0);
-               leftBack.setPower(0.-75);
-               rightBack.setPower(0);
-               rightFront.setPower(0.-75);
-           }
-           else if (forward >= 0.1 && forward <= 0.9 && side <= -0.1 && side >= -0.9){
-               leftFront.setPower(0);
-               leftBack.setPower(0.75);
-               rightBack.setPower(0);
-               rightFront.setPower(0.75);
-           }
-           */
 
             if (turn > 0) {
-                leftFront.setPower(-turn);
-                leftBack.setPower(-turn);
-                rightBack.setPower(turn);
-                rightFront.setPower(turn);
+                lf.setPower(-turn);
+                lb.setPower(-turn);
+                rb.setPower(turn);
+                rf.setPower(turn);
             }
             else if (turn < 0){
-                leftFront.setPower(- turn);
-                leftBack.setPower(-turn);
-                rightBack.setPower(turn);
-                rightFront.setPower(turn);
+                lf.setPower(- turn);
+                lb.setPower(-turn);
+                rb.setPower(turn);
+                rf.setPower(turn);
             }
             else if (side == 0 && forward == 0 && turn == 0) {
-                leftBack.setPower(0);
-                leftFront.setPower(0);
-                rightBack.setPower(0);
-                rightFront.setPower(0);
+                lb.setPower(0);
+                lf.setPower(0);
+                rb.setPower(0);
+                rf.setPower(0);
+            }
+            if (gamepad2.right_bumper) {
+                rightposition = rightposition + 0.2;
+                leftposition =  leftposition - 0.2;
+                rg.setPosition(rightposition);
+                lg.setPosition(leftposition);
+                telemetry.addData("Grab R", rg.getPosition());
+                telemetry.addData("Grab L", lg.getPosition());
+                telemetry.update();
+            }
+            else if (gamepad2.left_bumper) {
+                rightposition = rightposition - 0.2;
+                leftposition =  leftposition + 0.2;
+                rg.setPosition(rightposition);
+                lg.setPosition(leftposition);
+                telemetry.addData("Grab R", rg.getPosition());
+                telemetry.addData("Grab L", lg.getPosition());
+                telemetry.update();
+            }
+            if (gamepad2.y) {
+                rightposition2 = rightposition2 + 0.05;
+                leftposition2 = leftposition2 + 0.05;
+                rjk.setPosition(rightposition2 );
+                ljk.setPosition(leftposition2 + 0.65);
+            }
+            else if (gamepad2.a) {
+                rightposition2 = rightposition2 - 0.05;
+                leftposition2 = leftposition2 - 0.05;
+                rjk.setPosition(rightposition2);
+                ljk.setPosition(leftposition2 + 0.65);
             }
         }
-        if (gamepad1.right_trigger > 0){
-            Sweeper.setPower(1);
-        }
-        else if(gamepad1.left_trigger > 0){
-            Sweeper.setPower(-1);
-        }
-        else{
-            Sweeper.setPower(0);
-        }
-        if(gamepad2.right_trigger > 0){
-            rightShooter.setPower(armMode);
-            leftShooter.setPower(armMode);
-        }
-        else {
-            rightShooter.setPower(0);
-            leftShooter.setPower(0);
-        }
 
-        if (gamepad2.right_bumper){
-            ballPopper.setPower(mode);
-            sweep.setPower(1);
-        }
-        else if (gamepad2.left_bumper){
-            ballPopper.setPower(-mode);
-            sweep.setPower(-1);
-        }
-        else{
-            ballPopper.setPower(0);
-            sweep.setPower(0);
-        }
-
-        //Right and Left Pushers
-        double pushLeftPower = gamepad2.left_stick_y;
-        double pushRightPower = gamepad2.right_stick_y;
-        pusherLeft.setPower(pushLeftPower);
-        pusherRight.setPower(-pushRightPower);
-        telemetry.addData("speed" , armMode);
-        telemetry.update();
     }
 
 
