@@ -43,12 +43,10 @@ public abstract class MechBaseAutoOp extends OpMode {
     Servo ljk;
     Servo rextention;
     Servo lextentions;
-    CRServo rg;
-    CRServo lg;
-    DcMotor rs;
-    DcMotor ls;
+    Servo rg;
+    Servo lg;
     double position = 0;
-    double rightposition2 = 0;
+    double rightposition2 = 0.8;
     double leftposition2 = 1;
     double position3 = 0;
     private final int NAVX_DIM_I2C_PORT = 0;
@@ -240,16 +238,16 @@ public abstract class MechBaseAutoOp extends OpMode {
             leftBack = hardwareMap.get(DcMotor.class, "lb");
             rightBack = hardwareMap.get(DcMotor.class, "rb");
             color = hardwareMap.get(ColorSensor.class, "cs");
-            touchRed = hardwareMap.get(TouchSensor.class, "tr");
-            touchBlue = hardwareMap.get(TouchSensor.class, "tb");
-            rs = hardwareMap.get(DcMotor.class, "rs");
-            ls = hardwareMap.get(DcMotor.class, "ls");
-            rg = hardwareMap.get(CRServo.class, "rg");
-            lg = hardwareMap.get(CRServo.class, "lg");
+            //touchRed = hardwareMap.get(TouchSensor.class, "tr");
+            //touchBlue = hardwareMap.get(TouchSensor.class, "tb");
+            //rs = hardwareMap.get(DcMotor.class, "rs");
+            //ls = hardwareMap.get(DcMotor.class, "ls");
+            rg = hardwareMap.get(Servo.class, "rg");
+            lg = hardwareMap.get(Servo.class, "lg");
             rjk = hardwareMap.get(Servo.class, "rjk");
             ljk = hardwareMap.get(Servo.class, "ljk");
-            rextention = hardwareMap.get(Servo.class, "re");
-            lextentions = hardwareMap.get(Servo.class, "le");
+            //rextention = hardwareMap.get(Servo.class, "re");
+            //lextentions = hardwareMap.get(Servo.class, "le");
             rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
             rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
             rjk.setPosition(rightposition2);
@@ -278,16 +276,6 @@ public abstract class MechBaseAutoOp extends OpMode {
             telemetry.addData("Ignoring second click", "");
             telemetry.update();
         }
-    }
-
-    @Override
-    public void init_loop() {
-        telemetry.addData("click now", "");
-        telemetry.update();
-    }
-
-    @Override
-    public void start() {
     }
 
     public abstract void initSteps();
@@ -445,7 +433,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             if (counter < 10) {
                 counter++;
                 if (currentStep.colorType == RED) {
-                    rjk.setPosition(0.72);
+                    rjk.setPosition(0);
                 } else if (currentStep.colorType == BLUE) {
                     ljk.setPosition(0);
                 }
@@ -459,24 +447,23 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == DETECTCOLOR){
             if (currentStep.colorType == RED) {
-                if (color.red() > 1) {
+                if (color.red() > 3) {
                     colorVal = RED;
                     telemetry.addData("I'm getting red", color.red());
-                    telemetry.update();
-                    state = WAITFORCOUNTS;
-                    setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
-
-
-                } else if (color.blue() > 1) {
-                    colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", color.blue());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
                     currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
-                    state = WAITFORCOUNTS;
+                    state = WAITFORRESETENCODERS;
+
+
+                } else if (color.blue() > 3) {
+                    colorVal = BLUE;
+                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.update();
+                    state = WAITFORRESETENCODERS;
 
                 } else if (counter > 300) {
                     counter = 0;
@@ -487,22 +474,22 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
             }
             else if (currentStep.colorType == BLUE){
-                if (color.blue() > 1) {
+                if (color.blue() > 3) {
                     colorVal = RED;
                     telemetry.addData("I'm getting red", color.red());
-                    telemetry.update();
-                    state = WAITFORCOUNTS;
-
-                } else if (color.red() > 1) {
-                    colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", color.blue());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
                     currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
-                    state = WAITFORCOUNTS;
+                    state = WAITFORRESETENCODERS;
+
+                } else if (color.red() > 3) {
+                    colorVal = BLUE;
+                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.update();
+                    state = WAITFORRESETENCODERS;
 
                 } else if (counter > 300) {
                     counter = 0;
