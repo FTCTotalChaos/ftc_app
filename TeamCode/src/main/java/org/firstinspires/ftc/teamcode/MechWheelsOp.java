@@ -33,6 +33,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -50,55 +52,67 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name = "MechWhees", group = "Rocky")
+@TeleOp(name = "Ghost", group = "Ghost")
 public class MechWheelsOp extends OpMode {
 
     double armDelta = 0.01;
     boolean iSawDpadUpAlready = false;
     boolean iSawDpadDownAlready = false;
-    boolean iSawDpadUpAlreadyArm = false;
-    boolean iSawDpadDownAlreadyArm = false;
-    boolean iSawDpadLeftAlreadyWinch = false;
-    boolean iSawDpadRightAlreadyWinch = false;
-    DcMotor leftFront;
-    DcMotor rightFront;
-    DcMotor leftBack;
-    DcMotor rightBack;
-    DcMotor Sweeper;
-    DcMotor leftShooter;
-    DcMotor rightShooter;
-    DcMotor ballPopper;
-    CRServo pusherLeft;
-    CRServo pusherRight;
-    CRServo sweep;
+    boolean iSawDpadUpAlready2 = false;
+    boolean iSawDpadDownAlready2 = false;
+    public DcMotor rf;
+    public DcMotor lf;
+    public DcMotor rb;
+    public DcMotor lb;
+    public Servo rg;
+    public Servo lg;
+    public Servo rjk;
+    public Servo ljk;
+    public CRServo Slidy;
+    //public Servo rextention;
+    //public Servo lextentions;
+    public DcMotor up;
+    double rightposition = 0;
+    double leftposition = 0.9;
+    double rightposition2 = 0.8;
+    double leftposition2 = 1;
     final static double FAST = 1.0;
     final static double MED_FAST = 0.75;
     final static double MEDIUM = 0.5;
     final static double SLOW = 0.25;
     double armMode = MEDIUM;
     double mode = FAST;
-    double winchMode = FAST;
+    int upPos = 0;
     double flapPosition = 1;
 
     public void init()
     {
+        lf  = hardwareMap.get(DcMotor.class, "lf");
+        rf = hardwareMap.get(DcMotor.class, "rf");
+        lb = hardwareMap.get(DcMotor.class, "lb");
+        rb = hardwareMap.get(DcMotor.class, "rb");
+        up = hardwareMap.get(DcMotor.class, "up");
+        rg = hardwareMap.get(Servo.class, "rg");
+        lg = hardwareMap.get(Servo.class, "lg");
+        rjk = hardwareMap.get(Servo.class, "rjk");
+        ljk = hardwareMap.get(Servo.class, "ljk");
+        Slidy = hardwareMap.get(CRServo.class, "sc");
+        //rextention = hardwareMap.get(Servo.class, "re");
+        //lextentions = hardwareMap.get(Servo.class, "le");
+        rf.setDirection(DcMotorSimple.Direction.REVERSE);
+        rb.setDirection(DcMotorSimple.Direction.REVERSE);
+        up.setDirection(DcMotorSimple.Direction.REVERSE);
+        up.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rjk.setPosition(rightposition2);
+        ljk.setPosition(leftposition2);
+        lg.setPosition(leftposition);
+        rg.setPosition(rightposition);
 
-        leftFront = hardwareMap.get(DcMotor.class, "lf");
-        rightFront = hardwareMap.get(DcMotor.class, "rf");
-        leftBack = hardwareMap.get(DcMotor.class, "lb");
-        rightBack = hardwareMap.get(DcMotor.class, "rb");
-        Sweeper = hardwareMap.get(DcMotor.class, "swp");
-        rightShooter = hardwareMap.get(DcMotor.class, "rs");
-        leftShooter = hardwareMap.get(DcMotor.class,"ls");
-        pusherLeft = hardwareMap.get(CRServo.class, "left");
-        pusherRight = hardwareMap.get(CRServo.class,"right");
-        ballPopper = hardwareMap.get(DcMotor.class, "bp");
-        sweep = hardwareMap.get(CRServo.class, "sp");
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack.setDirection(DcMotor.Direction.REVERSE);
-        leftShooter.setDirection(DcMotor.Direction.REVERSE);
     }
+    @Override
+    public void start(){
 
+    }
     @Override
     public void loop()
     {
@@ -126,131 +140,125 @@ public class MechWheelsOp extends OpMode {
         mode = Range.clip(mode, 0.25, 0.75 );
 
 
-        if (gamepad2.dpad_up) {
-            if(!iSawDpadUpAlreadyArm) {
-                iSawDpadUpAlreadyArm = true;
-                armMode = armMode + 0.025;
-            }
-        }
-        else {
-            iSawDpadUpAlreadyArm = false;
-        }
-
-        if (gamepad2.dpad_down) {
-            if(!iSawDpadDownAlreadyArm) {
-                iSawDpadDownAlreadyArm = true;
-                armMode = armMode - 0.025;
-            }
-        }
-        else {
-            iSawDpadDownAlreadyArm = false;
-        }
-        armMode = Range.clip(armMode, 0.1, 1 );
-
-
-
         double forward = gamepad1.left_stick_y;
         double side = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
 
         if (side == 0 || forward == 0 || turn == 0) {
             if (Math.abs(forward) > Math.abs(side)) {
-                leftFront.setPower(forward);
-                leftBack.setPower(forward);
-                rightFront.setPower(forward);
-                rightBack.setPower(forward);
-            }
-            else if (Math.abs(side) > Math.abs(forward)) {
-                rightFront.setPower(side);
-                leftFront.setPower(-side);
-                rightBack.setPower(-side);
-                leftBack.setPower(side);
-            }
-           /*
-           else if (forward >= 0.1 && forward <= 0.9 && side >= 0.1 && side <= 0.9){
-
-               leftFront.setPower(0.75);
-               leftBack.setPower(0);
-               rightBack.setPower(0.75);
-               rightFront.setPower(0);
-           }
-           else if (forward <= -0.1 && forward >= -0.9 && side <= -0.1 && side >= -0.9){
-               leftFront.setPower(-0.75);
-               leftBack.setPower(0);
-               rightBack.setPower(-0.75);
-               rightFront.setPower(0);
-           }
-           else if (forward <= -0.1 && forward >= -0.9 && side >= 0.1 && side <= 0.9){
-               leftFront.setPower(0);
-               leftBack.setPower(0.-75);
-               rightBack.setPower(0);
-               rightFront.setPower(0.-75);
-           }
-           else if (forward >= 0.1 && forward <= 0.9 && side <= -0.1 && side >= -0.9){
-               leftFront.setPower(0);
-               leftBack.setPower(0.75);
-               rightBack.setPower(0);
-               rightFront.setPower(0.75);
-           }
-           */
-
-            if (turn > 0) {
-                leftFront.setPower(-turn);
-                leftBack.setPower(-turn);
-                rightBack.setPower(turn);
-                rightFront.setPower(turn);
-            }
-            else if (turn < 0){
-                leftFront.setPower(- turn);
-                leftBack.setPower(-turn);
-                rightBack.setPower(turn);
-                rightFront.setPower(turn);
-            }
-            else if (side == 0 && forward == 0 && turn == 0) {
-                leftBack.setPower(0);
-                leftFront.setPower(0);
-                rightBack.setPower(0);
-                rightFront.setPower(0);
+                lf.setPower(forward*mode);
+                lb.setPower(forward*mode);
+                rf.setPower(forward*mode);
+                rb.setPower(forward*mode);
+            } else if (Math.abs(side) > Math.abs(forward)) {
+                rf.setPower(-side*mode);
+                lf.setPower(side*mode);
+                rb.setPower(side*mode);
+                lb.setPower(-side*mode);
+            } else if (turn > 0) {
+                lf.setPower(-turn*mode);
+                lb.setPower(-turn*mode);
+                rb.setPower(turn*mode);
+                rf.setPower(turn*mode);
+            } else if (turn < 0) {
+                lf.setPower(-turn*mode);
+                lb.setPower(-turn*mode);
+                rb.setPower(turn*mode);
+                rf.setPower(turn*mode);
+            } else if (side == 0 && forward == 0 && turn == 0) {
+                lb.setPower(0);
+                lf.setPower(0);
+                rb.setPower(0);
+                rf.setPower(0);
             }
         }
-        if (gamepad1.right_trigger > 0){
-            Sweeper.setPower(1);
+        if (gamepad2.right_bumper) {
+            rightposition = rg.getPosition() + 0.01;
+            leftposition =  lg.getPosition() - 0.01;
+            leftposition = Range.clip(leftposition, 0, 1);
+            rightposition = Range.clip(rightposition, 0, 1);
+            rg.setPosition(rightposition);
+            lg.setPosition(leftposition);
+            telemetry.addData("Grab R", rg.getPosition());
+            telemetry.addData("Grab L", lg.getPosition());
+            telemetry.update();
         }
-        else if(gamepad1.left_trigger > 0){
-            Sweeper.setPower(-1);
+        else if (gamepad2.left_bumper) {
+            rightposition = rg.getPosition() - 0.01;
+            leftposition =  lg.getPosition() + 0.01;
+            leftposition = Range.clip(leftposition, 0, 1);
+            rightposition = Range.clip(rightposition, 0, 1);
+            rg.setPosition(rightposition);
+            lg.setPosition(leftposition);
+            telemetry.addData("Grab R", rg.getPosition());
+            telemetry.addData("Grab L", lg.getPosition());
+            telemetry.update();
         }
-        else{
-            Sweeper.setPower(0);
+        if (gamepad2.y) {
+            rightposition2 = rightposition2 + 0.05;
+            leftposition2 = leftposition2 + 0.05;
+            rjk.setPosition(rightposition2 );
+            ljk.setPosition(leftposition2 + 0.65);
         }
-        if(gamepad2.right_trigger > 0){
-            rightShooter.setPower(armMode);
-            leftShooter.setPower(armMode);
+        else if (gamepad2.a) {
+            rightposition2 = rightposition2 - 0.05;
+            leftposition2 = leftposition2 - 0.05;
+            rjk.setPosition(rightposition2);
+            ljk.setPosition(leftposition2 + 0.65);
+        }
+        if (gamepad2.right_trigger>0){
+            Slidy.setPower(1);
+            telemetry.addData("Slidy Power", Slidy.getPower());
+            telemetry.update();
+        }
+        else if (gamepad2.left_trigger > 0){
+            Slidy.setPower(-1);
+            telemetry.addData("Slidy Power", Slidy.getPower());
+            telemetry.update();
         }
         else {
-            rightShooter.setPower(0);
-            leftShooter.setPower(0);
+            Slidy.setPower(0);
+            telemetry.addData("Slidy Power", Slidy.getPower());
+            telemetry.update();
+        }
+        if (gamepad2.dpad_up) {
+            if(!iSawDpadUpAlready2) {
+                telemetry.addData("Should be moving up","");
+                telemetry.update();
+                iSawDpadUpAlready2 = true;
+                upPos = upPos + 300;
+                //upPos = Range.clip(upPos, 0, 4000);
+                up.setTargetPosition(upPos);
+                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                up.setPower(0.6);
+                telemetry.addData("Set the power",up.getPower());
+                telemetry.update();
+            }
+        }
+        else {
+            iSawDpadUpAlready2 = false;
+
         }
 
-        if (gamepad2.right_bumper){
-            ballPopper.setPower(mode);
-            sweep.setPower(1);
+        if (gamepad2.dpad_down) {
+            if(!iSawDpadDownAlready2) {
+                telemetry.addData("Should be moving down","");
+                telemetry.update();
+                iSawDpadDownAlready2 = true;
+                upPos = upPos - 300;
+                //upPos = Range.clip(upPos, 0, 4000);
+                up.setTargetPosition(upPos);
+                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                up.setPower(-0.6);
+                telemetry.addData("Set the power",up.getPower());
+                telemetry.update();
+            }
         }
-        else if (gamepad2.left_bumper){
-            ballPopper.setPower(-mode);
-            sweep.setPower(-1);
-        }
-        else{
-            ballPopper.setPower(0);
-            sweep.setPower(0);
+        else {
+            iSawDpadDownAlready2 = false;
         }
 
-        //Right and Left Pushers
-        double pushLeftPower = gamepad2.left_stick_y;
-        double pushRightPower = gamepad2.right_stick_y;
-        pusherLeft.setPower(pushLeftPower);
-        pusherRight.setPower(-pushRightPower);
-        telemetry.addData("speed" , armMode);
-        telemetry.update();
+
     }
 
 

@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.Autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.MechWheelsOp;
 
 /*
  * An example linear op mode where the robot will drive in
@@ -17,13 +18,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * the default update rate (50Hz), which may be lowered in order
  * to reduce the frequency of the updates to the drive system.
  */
-@Autonomous(name="AutoRed", group="Ghost")
-public class PIDDrive extends MechBaseAutoOp {
+@Autonomous(name="AutoBlue", group="Ghost")
+public class AutoBlue extends MechBaseAutoOp {
 
 
     @Override
     public void initSteps(){
-        steps.add(new Step(2, 0.1 , 0.1, MOVEARM, 0, RED));
+        steps.add(new Step(2, 0.1 , 0.1, MOVEARM, 0, BLUE));
 
 
     }
