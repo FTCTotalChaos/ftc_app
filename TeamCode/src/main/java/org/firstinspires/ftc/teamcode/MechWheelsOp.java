@@ -102,7 +102,6 @@ public class MechWheelsOp extends OpMode {
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
         up.setDirection(DcMotorSimple.Direction.REVERSE);
-        up.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rjk.setPosition(rightposition2);
         ljk.setPosition(leftposition2);
         lg.setPosition(leftposition);
@@ -143,6 +142,13 @@ public class MechWheelsOp extends OpMode {
         double forward = gamepad1.left_stick_y;
         double side = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
+        double lift = gamepad2.left_stick_y;
+
+        up.setPower(lift);
+
+        telemetry.addData("Up Power", up.getPower());
+        telemetry.update();
+
 
         if (side == 0 || forward == 0 || turn == 0) {
             if (Math.abs(forward) > Math.abs(side)) {
@@ -172,9 +178,9 @@ public class MechWheelsOp extends OpMode {
                 rf.setPower(0);
             }
         }
-        if (gamepad2.right_bumper) {
-            rightposition = rg.getPosition() + 0.01;
-            leftposition =  lg.getPosition() - 0.01;
+        if (gamepad2.a) {
+            rightposition = rg.getPosition() + 0.05;
+            leftposition =  lg.getPosition() - 0.05;
             leftposition = Range.clip(leftposition, 0, 1);
             rightposition = Range.clip(rightposition, 0, 1);
             rg.setPosition(rightposition);
@@ -183,28 +189,13 @@ public class MechWheelsOp extends OpMode {
             telemetry.addData("Grab L", lg.getPosition());
             telemetry.update();
         }
-        else if (gamepad2.left_bumper) {
-            rightposition = rg.getPosition() - 0.01;
-            leftposition =  lg.getPosition() + 0.01;
-            leftposition = Range.clip(leftposition, 0, 1);
-            rightposition = Range.clip(rightposition, 0, 1);
-            rg.setPosition(rightposition);
-            lg.setPosition(leftposition);
-            telemetry.addData("Grab R", rg.getPosition());
-            telemetry.addData("Grab L", lg.getPosition());
-            telemetry.update();
+        else if (gamepad2.right_trigger > 0) {
+            rg.setPosition(0.7);
+            lg.setPosition(0.28);
         }
-        if (gamepad2.y) {
-            rightposition2 = rightposition2 + 0.05;
-            leftposition2 = leftposition2 + 0.05;
-            rjk.setPosition(rightposition2 );
-            ljk.setPosition(leftposition2 + 0.65);
-        }
-        else if (gamepad2.a) {
-            rightposition2 = rightposition2 - 0.05;
-            leftposition2 = leftposition2 - 0.05;
-            rjk.setPosition(rightposition2);
-            ljk.setPosition(leftposition2 + 0.65);
+        else if (gamepad2.left_trigger > 0){
+            rg.setPosition(0);
+            lg.setPosition(0.9);
         }
         if (gamepad2.right_trigger>0){
             Slidy.setPower(1);
@@ -221,43 +212,6 @@ public class MechWheelsOp extends OpMode {
             telemetry.addData("Slidy Power", Slidy.getPower());
             telemetry.update();
         }
-        if (gamepad2.dpad_up) {
-            if(!iSawDpadUpAlready2) {
-                telemetry.addData("Should be moving up","");
-                telemetry.update();
-                iSawDpadUpAlready2 = true;
-                upPos = upPos + 300;
-                //upPos = Range.clip(upPos, 0, 4000);
-                up.setTargetPosition(upPos);
-                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                up.setPower(0.6);
-                telemetry.addData("Set the power",up.getPower());
-                telemetry.update();
-            }
-        }
-        else {
-            iSawDpadUpAlready2 = false;
-
-        }
-
-        if (gamepad2.dpad_down) {
-            if(!iSawDpadDownAlready2) {
-                telemetry.addData("Should be moving down","");
-                telemetry.update();
-                iSawDpadDownAlready2 = true;
-                upPos = upPos - 300;
-                //upPos = Range.clip(upPos, 0, 4000);
-                up.setTargetPosition(upPos);
-                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                up.setPower(-0.6);
-                telemetry.addData("Set the power",up.getPower());
-                telemetry.update();
-            }
-        }
-        else {
-            iSawDpadDownAlready2 = false;
-        }
-
 
     }
 
