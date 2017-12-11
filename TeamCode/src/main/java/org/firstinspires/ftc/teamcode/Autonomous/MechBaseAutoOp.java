@@ -67,9 +67,11 @@ public abstract class MechBaseAutoOp extends OpMode {
     private final double YAW_PID_I = 0.0;
     private final double YAW_PID_D = 0.0;
     private final int DEVICE_TIMEOUT_MS = 500;
-    ColorSensor color;
+    ColorSensor colorBlue;
+    ColorSensor colorRed;
     TouchSensor touchBlue;
     TouchSensor touchRed;
+    boolean hasTouched;
     Vector<Step> steps;
     Step currentStep;
     int counts = 0;
@@ -237,7 +239,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             rightFront = hardwareMap.get(DcMotor.class, "rf");
             leftBack = hardwareMap.get(DcMotor.class, "lb");
             rightBack = hardwareMap.get(DcMotor.class, "rb");
-            color = hardwareMap.get(ColorSensor.class, "cs");
+            colorBlue = hardwareMap.get(ColorSensor.class, "cb");
+            colorRed = hardwareMap.get(ColorSensor.class, "cr");
             //touchRed = hardwareMap.get(TouchSensor.class, "tr");
             //touchBlue = hardwareMap.get(TouchSensor.class, "tb");
             //rs = hardwareMap.get(DcMotor.class, "rs");
@@ -248,8 +251,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             ljk = hardwareMap.get(Servo.class, "ljk");
             //rextention = hardwareMap.get(Servo.class, "re");
             //lextentions = hardwareMap.get(Servo.class, "le");
-            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-            rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
             rjk.setPosition(rightposition2);
             ljk.setPosition(leftposition2);
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
@@ -308,8 +311,8 @@ public abstract class MechBaseAutoOp extends OpMode {
                 setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
 
 
-            } else if (currentStep.sType == WAITFORTOUCH) {
-                state = TOUCHY;
+            } else if (currentStep.sType == TOUCHY) {
+                state = WAITFORTOUCH;
             } else if (currentStep.sType == MOVEARM) {
                 state = JEWELKNOCK;
                 initializeNavX(TARGET_ANGLE_DEGREES);
@@ -380,7 +383,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                 setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
             }
         }
-        else if (state == TOUCHY){
+        else if (state == WAITFORTOUCH){
             if (currentStep.colorType ==  RED){
                 if (touchRed.isPressed()){
                     setMotorPower(0,0,0,0);
@@ -447,9 +450,9 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == DETECTCOLOR){
             if (currentStep.colorType == RED) {
-                if (color.red() > 3) {
+                if (colorRed.red() > 3) {
                     colorVal = RED;
-                    telemetry.addData("I'm getting red", color.red());
+                    telemetry.addData("I'm getting red", colorRed.red());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
@@ -459,9 +462,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                     state = WAITFORRESETENCODERS;
 
 
-                } else if (color.blue() > 3) {
+                } else if (colorRed.blue() > 3) {
                     colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
 
@@ -474,9 +477,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
             }
             else if (currentStep.colorType == BLUE){
-                if (color.blue() > 3) {
+                if (colorBlue.blue() > 3) {
                     colorVal = RED;
-                    telemetry.addData("I'm getting red", color.red());
+                    telemetry.addData("I'm getting red", colorBlue.red());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
@@ -485,9 +488,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
                     state = WAITFORRESETENCODERS;
 
-                } else if (color.red() > 3) {
+                } else if (colorBlue.red() > 3) {
                     colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
 

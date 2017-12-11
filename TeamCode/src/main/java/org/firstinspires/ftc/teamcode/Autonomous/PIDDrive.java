@@ -23,7 +23,7 @@ public class PIDDrive extends MechBaseAutoOp {
 
     @Override
     public void initSteps(){
-        steps.add(new Step(2, 0.1 , 0.1, MOVEARM, 0, RED));
+        steps.add(new Step(5, 0.1 , 0.1, MOVE, 0, RED));
 
 
     }
