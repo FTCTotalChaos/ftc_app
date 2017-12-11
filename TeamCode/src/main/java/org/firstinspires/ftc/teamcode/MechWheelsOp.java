@@ -72,10 +72,10 @@ public class MechWheelsOp extends OpMode {
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
-    double rightposition = 0.9;
+    double rightposition = 0;
     double leftposition = 0.9;
     double rightposition2 = 0.8;
-    double leftposition2 = 0;
+    double leftposition2 = 1;
     final static double FAST = 1.0;
     final static double MED_FAST = 0.75;
     final static double MEDIUM = 0.5;
@@ -195,12 +195,16 @@ public class MechWheelsOp extends OpMode {
             telemetry.update();
         }
         if (gamepad2.y) {
+            rightposition2 = rightposition2 + 0.05;
             leftposition2 = leftposition2 + 0.05;
-            ljk.setPosition(leftposition2);
+            rjk.setPosition(rightposition2 );
+            ljk.setPosition(leftposition2 + 0.65);
         }
         else if (gamepad2.a) {
+            rightposition2 = rightposition2 - 0.05;
             leftposition2 = leftposition2 - 0.05;
-            ljk.setPosition(leftposition2);
+            rjk.setPosition(rightposition2);
+            ljk.setPosition(leftposition2 + 0.65);
         }
         if (gamepad2.right_trigger>0){
             Slidy.setPower(1);
@@ -214,6 +218,8 @@ public class MechWheelsOp extends OpMode {
         }
         else {
             Slidy.setPower(0);
+            telemetry.addData("Slidy Power", Slidy.getPower());
+            telemetry.update();
         }
         if (gamepad2.dpad_up) {
             if(!iSawDpadUpAlready2) {
