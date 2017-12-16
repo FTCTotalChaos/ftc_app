@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -46,8 +47,8 @@ public abstract class MechBaseAutoOp extends OpMode {
     Servo rg;
     Servo lg;
     double position = 0;
-    double rightposition2 = 0.8;
-    double leftposition2 = 1;
+    double rightposition2 = 0.695;
+    double leftposition2 = 0.66;
     double position3 = 0;
     private final int NAVX_DIM_I2C_PORT = 0;
     private AHRS navx_device;
@@ -67,9 +68,11 @@ public abstract class MechBaseAutoOp extends OpMode {
     private final double YAW_PID_I = 0.0;
     private final double YAW_PID_D = 0.0;
     private final int DEVICE_TIMEOUT_MS = 500;
-    ColorSensor color;
+    ColorSensor colorBlue;
+    ColorSensor colorRed;
     TouchSensor touchBlue;
     TouchSensor touchRed;
+    boolean hasTouched;
     Vector<Step> steps;
     Step currentStep;
     int counts = 0;
@@ -237,7 +240,10 @@ public abstract class MechBaseAutoOp extends OpMode {
             rightFront = hardwareMap.get(DcMotor.class, "rf");
             leftBack = hardwareMap.get(DcMotor.class, "lb");
             rightBack = hardwareMap.get(DcMotor.class, "rb");
-            color = hardwareMap.get(ColorSensor.class, "cs");
+            colorBlue = hardwareMap.get(ColorSensor.class, "cb");
+            colorRed = hardwareMap.get(ColorSensor.class, "cr");
+            colorRed.setI2cAddress(I2cAddr.create8bit(0x4c) );
+            colorBlue.setI2cAddress(I2cAddr.create8bit(0x3c) );
             //touchRed = hardwareMap.get(TouchSensor.class, "tr");
             //touchBlue = hardwareMap.get(TouchSensor.class, "tb");
             //rs = hardwareMap.get(DcMotor.class, "rs");
@@ -248,8 +254,9 @@ public abstract class MechBaseAutoOp extends OpMode {
             ljk = hardwareMap.get(Servo.class, "ljk");
             //rextention = hardwareMap.get(Servo.class, "re");
             //lextentions = hardwareMap.get(Servo.class, "le");
-            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
             rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
             rjk.setPosition(rightposition2);
             ljk.setPosition(leftposition2);
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
@@ -308,8 +315,8 @@ public abstract class MechBaseAutoOp extends OpMode {
                 setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
 
 
-            } else if (currentStep.sType == WAITFORTOUCH) {
-                state = TOUCHY;
+            } else if (currentStep.sType == TOUCHY) {
+                state = WAITFORTOUCH;
             } else if (currentStep.sType == MOVEARM) {
                 state = JEWELKNOCK;
                 initializeNavX(TARGET_ANGLE_DEGREES);
@@ -380,7 +387,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                 setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
             }
         }
-        else if (state == TOUCHY){
+        else if (state == WAITFORTOUCH){
             if (currentStep.colorType ==  RED){
                 if (touchRed.isPressed()){
                     setMotorPower(0,0,0,0);
@@ -433,9 +440,9 @@ public abstract class MechBaseAutoOp extends OpMode {
             if (counter < 10) {
                 counter++;
                 if (currentStep.colorType == RED) {
-                    rjk.setPosition(0);
+                    rjk.setPosition(0.01);
                 } else if (currentStep.colorType == BLUE) {
-                    ljk.setPosition(0);
+                    ljk.setPosition(0.02);
                 }
                 telemetry.addData("TWO CHAINZZZZ:", rjk.getPosition());
                 telemetry.update();
@@ -447,22 +454,22 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == DETECTCOLOR){
             if (currentStep.colorType == RED) {
-                if (color.red() > 3) {
+                if (colorRed.red() > 3) {
                     colorVal = RED;
-                    telemetry.addData("I'm getting red", color.red());
+                    telemetry.addData("I'm getting red", colorRed.red());
+                    telemetry.update();
+                    state = WAITFORRESETENCODERS;
+
+
+                } else if (colorRed.blue() > 3) {
+                    colorVal = BLUE;
+                    telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
                     currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
-                    state = WAITFORRESETENCODERS;
-
-
-                } else if (color.blue() > 3) {
-                    colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", color.blue());
-                    telemetry.update();
                     state = WAITFORRESETENCODERS;
 
                 } else if (counter > 300) {
@@ -474,9 +481,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
             }
             else if (currentStep.colorType == BLUE){
-                if (color.blue() > 3) {
+                if (colorBlue.blue() > 3) {
                     colorVal = RED;
-                    telemetry.addData("I'm getting red", color.red());
+                    telemetry.addData("I'm getting red", colorBlue.red());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
@@ -485,9 +492,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
                     state = WAITFORRESETENCODERS;
 
-                } else if (color.red() > 3) {
+                } else if (colorBlue.red() > 3) {
                     colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", color.blue());
+                    telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
 
@@ -496,48 +503,6 @@ public abstract class MechBaseAutoOp extends OpMode {
                     nextStep();
                 } else {
                     counter++;
-                }
-            }
-        }
-        else if (state == TURNEXTENTION){
-            if(currentStep.colorType == RED){
-                if (colorVal == BLUE){
-                    if (counter < 50) {
-                        rextention.setPosition(0);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
-                else if (colorVal == RED){
-                    if (counter < 50) {
-                        rextention.setPosition(1);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
-            }
-            else if(currentStep.colorType == BLUE){
-                if (colorVal == BLUE){
-                    if (counter < 50) {
-                        lextentions.setPosition(1);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
-                }
-                else if (colorVal == RED){
-                    if (counter < 50) {
-                        lextentions.setPosition(4.2);
-                        counter++;
-                    }
-                    else{
-                        nextStep();
-                    }
                 }
             }
         }

@@ -24,7 +24,7 @@ public class AutoBlue extends MechBaseAutoOp {
 
     @Override
     public void initSteps(){
-        steps.add(new Step(2, 0.1 , 0.1, MOVEARM, 0, BLUE));
+        steps.add(new Step(7, 0.1 , 0.1, MOVEARM, 0, BLUE));
 
 
     }
