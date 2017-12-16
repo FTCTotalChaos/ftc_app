@@ -132,7 +132,7 @@ public class MechWheelsOp extends OpMode {
     {
         // When dpad is pushed up increase one mode
         //When dpad is pushed down decrease by one mode
-        if (gamepad1.dpad_up) {
+        if (gamepad1.right_bumper) {
             if(!iSawDpadUpAlready) {
                 iSawDpadUpAlready = true;
                 mode = mode + 0.25;
@@ -142,7 +142,7 @@ public class MechWheelsOp extends OpMode {
             iSawDpadUpAlready = false;
         }
 
-        if (gamepad1.dpad_down) {
+        if (gamepad1.left_bumper) {
             if(!iSawDpadDownAlready) {
                 iSawDpadDownAlready = true;
                 mode = mode - 0.25;
@@ -198,11 +198,11 @@ public class MechWheelsOp extends OpMode {
             rs.setPower(0);
             ls.setPower(0);
         }
-        if (gamepad2.right_bumper) {
+        if (gamepad2.right_trigger>0) {
             rg.setPosition(0.15);
             lg.setPosition(0.77);
         }
-        else if (gamepad2.left_bumper) {
+        else if (gamepad2.left_trigger>0) {
             rg.setPosition(0.575);
             lg.setPosition(0.39);
         }
@@ -220,7 +220,7 @@ public class MechWheelsOp extends OpMode {
         }
         if (gamepad2.right_stick_x>0){
             Slidy.setPower(1); 
-            telemetry.addData("Slidy Power", Slidy.getPower());
+            telemetry.addData("Slid y Power", Slidy.getPower());
             telemetry.update();
         }
         else if (gamepad2.right_stick_x < 0){
@@ -231,7 +231,7 @@ public class MechWheelsOp extends OpMode {
         else {
             Slidy.setPower(0.5);
         }
-        upPos = gamepad2.left_stick_y;
+        upPos = gamepad2.right_stick_y;
         up.setPower(upPos);
 
 
