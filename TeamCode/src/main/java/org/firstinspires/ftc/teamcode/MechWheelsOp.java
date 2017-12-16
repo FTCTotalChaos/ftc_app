@@ -69,6 +69,10 @@ public class MechWheelsOp extends OpMode {
     public Servo rjk;
     public Servo ljk;
     public CRServo Slidy;
+    public CRServo rc;
+    public CRServo lc;
+    public Servo rm;
+    public Servo lm;
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
@@ -97,6 +101,11 @@ public class MechWheelsOp extends OpMode {
         rjk = hardwareMap.get(Servo.class, "rjk");
         ljk = hardwareMap.get(Servo.class, "ljk");
         Slidy = hardwareMap.get(CRServo.class, "sc");
+        rc = hardwareMap.get(CRServo.class, "rc");
+        lc = hardwareMap.get(CRServo.class, "lc");
+        rm = hardwareMap.get(Servo.class, "rm");
+        lm = hardwareMap.get(Servo.class, "lm");
+
         //rextention = hardwareMap.get(Servo.class, "re");
         //lextentions = hardwareMap.get(Servo.class, "le");
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
