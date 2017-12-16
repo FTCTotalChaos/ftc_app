@@ -63,7 +63,6 @@ public class ColorSensorTest extends OpMode {
     public void init()
     {
         colorBlue = hardwareMap.get(ColorSensor.class, "cb");
-        hardwareMap.colorSensor.get("cb");
         colorRed = hardwareMap.get(ColorSensor.class, "cr");
         colorRed.setI2cAddress(I2cAddr.create8bit(0x4c) );
         colorBlue.setI2cAddress(I2cAddr.create8bit(0x3c) );
