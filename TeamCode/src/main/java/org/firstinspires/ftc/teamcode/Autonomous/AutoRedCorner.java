@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.Autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.teamcode.MechWheelsOp;
-
 /*
  * An example linear op mode where the robot will drive in
  * a straight line (where the driving directon is guided by
@@ -18,14 +16,26 @@ import org.firstinspires.ftc.teamcode.MechWheelsOp;
  * the default update rate (50Hz), which may be lowered in order
  * to reduce the frequency of the updates to the drive system.
  */
-@Autonomous(name="Blue", group="Ghost")
-public class AutoBlue extends MechBaseAutoOp {
+@Autonomous(name="RedCorner", group="Ghost")
+public class AutoRedCorner extends MechBaseAutoOp {
 
 
     @Override
     public void initSteps(){
-        steps.add(new Step(3, 0.1 , 0.1, MOVEARM, 0, BLUE));
-        steps.add(new Step(-40, -0.1 , -0.1, MOVE, 0, BLUE));
+        steps.add(new Step(10, 0.1 , 0.1, MOVEARM, 0, RED));
+        if (colorVal == RED){
+            steps.add(new Step(-26, -0.1 , -0.1, MOVE, 0, RED));
+        }
+        else if (colorVal == BLUE){
+            steps.add(new Step(-32, -0.1 , -0.1, MOVE, 0, RED));
+        }
+        else{
+            steps.add(new Step(-29, -0.1 , -0.1, MOVE, 0, RED));
+        }
+        steps.add(new Step(0, 0.1, 0.1, RIGHT, 90, RED));
+        steps.add(new Step(-4, -0.1 , -0.1, MOVE, 0, RED));
+        steps.add(new Step(-26, -0.1 , -0.1, DROPBLOCK, 0, RED));
+
 
     }
 }

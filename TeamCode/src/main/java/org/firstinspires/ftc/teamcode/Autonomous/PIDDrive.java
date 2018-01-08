@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /*
@@ -18,12 +19,25 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * to reduce the frequency of the updates to the drive system.
  */
 @Autonomous(name="AutoRed", group="Ghost")
+@Disabled
 public class PIDDrive extends MechBaseAutoOp {
 
 
     @Override
     public void initSteps(){
         steps.add(new Step(10, 0.1 , 0.1, MOVEARM, 0, RED));
+        if (colorVal == RED){
+            steps.add(new Step(-26, -0.1 , -0.1, MOVE, 0, RED));
+        }
+        else if (colorVal == BLUE){
+            steps.add(new Step(-32, -0.1 , -0.1, MOVE, 0, RED));
+        }
+        else{
+            steps.add(new Step(-29, -0.1 , -0.1, MOVE, 0, RED));
+        }
+        steps.add(new Step(0, 0.1, 0.1, RIGHT, 90, RED));
+        steps.add(new Step(-4, -0.1 , -0.1, MOVE, 0, RED));
+        steps.add(new Step(-26, -0.1 , -0.1, DROPBLOCK, 0, RED));
 
 
     }

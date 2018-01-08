@@ -68,11 +68,6 @@ public class MechWheelsOp extends OpMode {
     public Servo lg;
     public Servo rjk;
     public Servo ljk;
-    public CRServo rsg;
-    public CRServo lsg;
-    public CRServo Slidy;
-    public CRServo rs;
-    public CRServo ls;
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
@@ -103,11 +98,11 @@ public class MechWheelsOp extends OpMode {
         lg = hardwareMap.get(Servo.class, "lg");
         rjk = hardwareMap.get(Servo.class, "rjk");
         ljk = hardwareMap.get(Servo.class, "ljk");
-        Slidy = hardwareMap.get(CRServo.class, "sc");
-        rsg = hardwareMap.get(CRServo.class, "rsg");
-        lsg = hardwareMap.get(CRServo.class, "lsg");
-        rs = hardwareMap.get(CRServo.class, "rs");
-        ls = hardwareMap.get(CRServo.class, "ls");
+        //Slidy = hardwareMap.get(CRServo.class, "sc");
+        //rsg = hardwareMap.get(CRServo.class, "rsg");
+        //lsg = hardwareMap.get(CRServo.class, "lsg");
+        //rs = hardwareMap.get(CRServo.class, "rs");
+        //ls = hardwareMap.get(CRServo.class, "ls");
         //rextention = hardwareMap.get(Servo.class, "re");
         //lextentions = hardwareMap.get(Servo.class, "le");
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -117,11 +112,6 @@ public class MechWheelsOp extends OpMode {
         ljk.setPosition(leftposition2);
         lg.setPosition(leftposition);
         rg.setPosition(rightposition);
-        rsg.setPower(-0.01);
-        lsg.setPower(0);
-        Slidy.setPower(0.5);
-        ls.setPower(0);
-        rs.setPower(0);
     }
     @Override
     public void start(){
@@ -187,16 +177,16 @@ public class MechWheelsOp extends OpMode {
             }
         }
         if (gamepad2.y){
-            rs.setPower(1);
-            ls.setPower(-1);
+            rjk.setPosition(rightposition2);
+        }
+        if (gamepad2.b){
+            ljk.setPosition(leftposition2);
         }
         if (gamepad2.a){
-            rs.setPower(-1);
-            ls.setPower(1);
+            rjk.setPosition(0);
         }
         if (gamepad2.x){
-            rs.setPower(0);
-            ls.setPower(0);
+            ljk.setPosition(0);
         }
         if (gamepad2.right_trigger>0) {
             rg.setPosition(0.15);
@@ -206,7 +196,7 @@ public class MechWheelsOp extends OpMode {
             rg.setPosition(0.575);
             lg.setPosition(0.39);
         }
-        if (gamepad2.right_trigger > 0){
+        /*if (gamepad2.right_trigger > 0){
             rsg.setPower(0.5);
             lsg.setPower(-0.5);
         }
@@ -217,20 +207,7 @@ public class MechWheelsOp extends OpMode {
         else{
             rsg.setPower(0);
             lsg.setPower(0);
-        }
-        if (gamepad2.right_stick_x>0){
-            Slidy.setPower(1); 
-            telemetry.addData("Slid y Power", Slidy.getPower());
-            telemetry.update();
-        }
-        else if (gamepad2.right_stick_x < 0){
-            Slidy.setPower(0);
-            telemetry.addData("Slidy Power", Slidy.getPower());
-            telemetry.update();
-        }
-        else {
-            Slidy.setPower(0.5);
-        }
+        }*/
         upPos = gamepad2.right_stick_y;
         up.setPower(upPos);
 

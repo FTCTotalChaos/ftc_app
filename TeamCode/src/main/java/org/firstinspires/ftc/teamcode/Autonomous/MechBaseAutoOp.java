@@ -47,8 +47,10 @@ public abstract class MechBaseAutoOp extends OpMode {
     Servo rg;
     Servo lg;
     double position = 0;
-    double rightposition2 = 0.695;
-    double leftposition2 = 0.66;
+    double rightposition = 0.575;
+    double leftposition = 0.39;
+    double rightposition2 = 0.68;
+    double leftposition2 = 0.58;
     double position3 = 0;
     private final int NAVX_DIM_I2C_PORT = 0;
     private AHRS navx_device;
@@ -88,9 +90,10 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int VUCHECK = 8;
     final static int TURNEXTENTION = 9;
     final static int WAITFORSIDE = 10;
+    final static int DROPBLOCK = 11;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
-    final static double GEAR_RATIO = 0.3333;
+    final static double GEAR_RATIO = 0.5;
     final static double WHEEL_DIAMETER = 4;
     final static double CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
     //Start step types
@@ -102,7 +105,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int BACK = 6;
     final static int WAIT = 9;
     final static int MOVEARM = 10;
-    final static int FORWARD = 11;
+    final static int BLOCK = 11;
     final static int BACKWARD = 12;
     final static int NONE = 13;
     final static int VUFORIA = 14;
@@ -256,9 +259,10 @@ public abstract class MechBaseAutoOp extends OpMode {
             //lextentions = hardwareMap.get(Servo.class, "le");
             rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
             rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-            leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
             rjk.setPosition(rightposition2);
             ljk.setPosition(leftposition2);
+            rg.setPosition(rightposition);
+            lg.setPosition(leftposition);
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
                     NAVX_DIM_I2C_PORT,
                     AHRS.DeviceDataType.kProcessedData,
@@ -268,7 +272,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             currentStep = steps.get(0);
             currentStepIndex = 0;
 
-            int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+            /*int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
             parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
             parameters.vuforiaLicenseKey = "AYydEH3/////AAAAGXMATUMRIE4Pv8w0T+lHxs5Vah12gKSD60BBnydPYF3GeoUEUBpr9Q4NXikGwa+wLuElb3hZH2ujmFnni6yudqsshk91NxEEeOBZBscu60T3JbZVW05gvgAbxrAQgQRbMomuW3rFL/KhLVeOL+pb0k0DJEAsgTcoL7dahj1z/9tfrZC0vFDIW4qXsnzmjXRyT1MWXc8odL8npQI+FJZoyh8gpfGs6iuY6ZCi+QkjdlRIpsZnozIPCN5S9K1Zv8/3CnOmBz50I7x+fiZM9Soj3jbShvKQyfHRMTYX4b1DAspwJ6ekaU10UxtUeijN2pjfRv8jE857LRDmrBsuO6YBrlI9C49idhYLXADg8DlegTq4 ";
@@ -278,7 +282,7 @@ public abstract class MechBaseAutoOp extends OpMode {
 
             relicTrackables = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
             relicTemplate = relicTrackables.get(0);
-            relicTemplate.setName("relicVuMarkTemplate"); // can help in debugging; otherwise not necessary
+            relicTemplate.setName("relicVuMarkTemplate"); // can help in debugging; otherwise not necessary*/
         } else {
             telemetry.addData("Ignoring second click", "");
             telemetry.update();
@@ -286,7 +290,11 @@ public abstract class MechBaseAutoOp extends OpMode {
     }
 
     public abstract void initSteps();
-
+    @Override
+    public void start(){
+        rg.setPosition(0.15);
+        lg.setPosition(0.77);
+    }
     @Override
     public void loop() {
         if (state == ATREST) {
@@ -319,9 +327,13 @@ public abstract class MechBaseAutoOp extends OpMode {
                 state = WAITFORTOUCH;
             } else if (currentStep.sType == MOVEARM) {
                 state = JEWELKNOCK;
-                initializeNavX(TARGET_ANGLE_DEGREES);
+                initializeNavX(0);
+                resetEncoders();
             } else if (currentStep.sType == VUFORIA) {
                 state = VUCHECK;
+            }
+            else if ( currentStep.sType == BLOCK){
+                state = DROPBLOCK;
             }
         } else if (state == WAITFORRESETENCODERS) {
             if (areEncodersReset()) {
@@ -336,6 +348,8 @@ public abstract class MechBaseAutoOp extends OpMode {
         } else if (state == WAITFORCOUNTS) {
             if (areCountsReached(currentStep.leftFrontCounts, currentStep.rightFrontCounts, currentStep.leftBackCounts, currentStep.rightBackCounts)) {
                 setMotorPower(0, 0, 0, 0);
+                rjk.setPosition(rightposition2);
+                ljk.setPosition(leftposition2);
                 nextStep();
             } else {
                 setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
@@ -437,12 +451,12 @@ public abstract class MechBaseAutoOp extends OpMode {
 
         }
         else if (state == JEWELKNOCK){
-            if (counter < 10) {
+            if (counter < 100) {
                 counter++;
                 if (currentStep.colorType == RED) {
-                    rjk.setPosition(0.01);
+                    rjk.setPosition(0);
                 } else if (currentStep.colorType == BLUE) {
-                    ljk.setPosition(0.02);
+                    ljk.setPosition(0);
                 }
                 telemetry.addData("TWO CHAINZZZZ:", rjk.getPosition());
                 telemetry.update();
@@ -457,33 +471,40 @@ public abstract class MechBaseAutoOp extends OpMode {
                 if (colorRed.red() > 3) {
                     colorVal = RED;
                     telemetry.addData("I'm getting red", colorRed.red());
-                    telemetry.update();
-                    state = WAITFORRESETENCODERS;
-
-
-                } else if (colorRed.blue() > 3) {
-                    colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", colorRed.blue());
-                    telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
                     currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
+                    telemetry.update();
+                    state = WAITFORRESETENCODERS;
+                } else if (colorRed.blue() > 3) {
+                    colorVal = BLUE;
+                    telemetry.addData("I'm getting blue", colorRed.blue());
+                    telemetry.update();
                     state = WAITFORRESETENCODERS;
 
                 } else if (counter > 300) {
+                    rjk.setPosition(rightposition2);
+                    ljk.setPosition(leftposition2);
                     counter = 0;
                     nextStep();
                 } else {
-                    telemetry.addData("Not getting anything", "");
+                    telemetry.addData("Not getting anything", colorRed.red());
+                    telemetry.addData("Not getting anything", colorRed.blue());
                     counter++;
                 }
             }
             else if (currentStep.colorType == BLUE){
                 if (colorBlue.blue() > 3) {
-                    colorVal = RED;
+                    colorVal = BLUE;
                     telemetry.addData("I'm getting red", colorBlue.red());
+                    telemetry.update();
+                    state = WAITFORRESETENCODERS;
+
+                } else if (colorBlue.red() > 3) {
+                    colorVal = RED;
+                    telemetry.addData("I'm getting blue", colorBlue.blue());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
@@ -492,22 +513,20 @@ public abstract class MechBaseAutoOp extends OpMode {
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
                     state = WAITFORRESETENCODERS;
 
-                } else if (colorBlue.red() > 3) {
-                    colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", colorRed.blue());
-                    telemetry.update();
-                    state = WAITFORRESETENCODERS;
-
                 } else if (counter > 300) {
                     counter = 0;
+                    rjk.setPosition(rightposition2);
+                    ljk.setPosition(leftposition2);
                     nextStep();
                 } else {
+                    telemetry.addData("Not getting anything", colorBlue.red());
+                    telemetry.addData("Not getting anything", colorBlue.blue());
                     counter++;
                 }
             }
         }
         else if(state ==  VUCHECK){
-            relicTrackables.activate();
+            /*relicTrackables.activate();
             RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
             if (vuMark == RelicRecoveryVuMark.UNKNOWN) {
                 telemetry.addData("VuForia is getting no readings","");
@@ -546,6 +565,17 @@ public abstract class MechBaseAutoOp extends OpMode {
                 nextStep();
             }
             telemetry.update();
+            */
+        }
+        else if(state == DROPBLOCK){
+            if (counter < 10) {
+                counter++;
+                rg.setPosition(0.575);
+                lg.setPosition(0.39);
+            }
+            else {
+                counter = 0;
+            }
 
         }
         else if (state == FINISHED){
@@ -558,7 +588,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     }
     @Override
     public void stop(){
-        devuforia();
+        /*devuforia();*/
     }
 
     public void resetEncoders() {
@@ -606,6 +636,6 @@ public abstract class MechBaseAutoOp extends OpMode {
     }
 
     public void devuforia(){
-        relicTrackables.deactivate();
+        //relicTrackables.deactivate();
     }
 }
