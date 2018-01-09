@@ -39,7 +39,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     DcMotor rightFront;
     DcMotor leftBack;
     DcMotor rightBack;
-    DcMotor armTwist;
+    DcMotor up;
     Servo rjk;
     Servo ljk;
     Servo rextention;
@@ -155,14 +155,14 @@ public abstract class MechBaseAutoOp extends OpMode {
                 rightFrontPower = right;
                 leftBackPower = left;
                 rightBackPower = right;
-            } else if (stepType == RIGHT) {
-                turnAngle = angle;
+            } else if (stepType == LEFT) {
+                turnAngle = -angle;
                 leftFrontPower = -left;
                 rightFrontPower = right;
                 leftBackPower = -left;
                 rightBackPower = right;
 
-            } else if (stepType == LEFT) {
+            } else if (stepType == RIGHT) {
                 turnAngle = angle;
                 leftFrontPower = left;
                 rightFrontPower = -right;
@@ -243,6 +243,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             rightFront = hardwareMap.get(DcMotor.class, "rf");
             leftBack = hardwareMap.get(DcMotor.class, "lb");
             rightBack = hardwareMap.get(DcMotor.class, "rb");
+            up = hardwareMap.get(DcMotor.class, "up");
             colorBlue = hardwareMap.get(ColorSensor.class, "cb");
             colorRed = hardwareMap.get(ColorSensor.class, "cr");
             colorRed.setI2cAddress(I2cAddr.create8bit(0x4c) );
@@ -292,6 +293,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     public abstract void initSteps();
     @Override
     public void start(){
+        int count = 0;
         rg.setPosition(0.15);
         lg.setPosition(0.77);
     }
@@ -424,7 +426,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
 
             double yaw = navx_device.getYaw();
-            if (Math.abs(yaw - currentStep.turnAngle) >= 2) {
+            if (Math.abs(yaw - currentStep.turnAngle) >= 1) {
                 telemetry.addData("Current yaw: ", yaw);
                 telemetry.update();
                 try {
@@ -432,7 +434,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                         if (!yawPIDResult.isOnTarget() ) {
                             double output = yawPIDResult.getOutput();
                             if ( output < 0 ) {
-                                setMotorPower(output, -output, output, -output);
+                                setMotorPower(-output, output, -output, output);
                             } else {
                                 setMotorPower(-output,output, -output, output);
                             }
@@ -451,7 +453,7 @@ public abstract class MechBaseAutoOp extends OpMode {
 
         }
         else if (state == JEWELKNOCK){
-            if (counter < 100) {
+            if (counter < 150) {
                 counter++;
                 if (currentStep.colorType == RED) {
                     rjk.setPosition(0);
@@ -468,7 +470,7 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == DETECTCOLOR){
             if (currentStep.colorType == RED) {
-                if (colorRed.red() > 3) {
+                if (colorRed.red() > 0) {
                     colorVal = RED;
                     telemetry.addData("I'm getting red", colorRed.red());
                     currentStep.distance = currentStep.distance * -1;
@@ -478,13 +480,13 @@ public abstract class MechBaseAutoOp extends OpMode {
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
-                } else if (colorRed.blue() > 3) {
+                } else if (colorRed.blue() > 0) {
                     colorVal = BLUE;
                     telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
 
-                } else if (counter > 300) {
+                } else if (counter > 600) {
                     rjk.setPosition(rightposition2);
                     ljk.setPosition(leftposition2);
                     counter = 0;
