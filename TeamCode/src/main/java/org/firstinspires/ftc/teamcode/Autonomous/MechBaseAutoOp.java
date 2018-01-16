@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -91,6 +92,10 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int TURNEXTENTION = 9;
     final static int WAITFORSIDE = 10;
     final static int DROPBLOCK = 11;
+    final static int RAISE = 12;
+    final static int SPECJKVU = 13;
+    final static int SPECJK = 14;
+    final static int SPECVU = 15;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
     final static double GEAR_RATIO = 0.5;
@@ -112,6 +117,10 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int SIDERIGHT = 15;
     final static int SIDELEFT = 16;
     final static int TOUCHY = 17;
+    final static int RAISEBLOCK = 18;
+    final static int VUJKMOVE = 19;
+    final static int JKMOVE = 19;
+    final static int VUMOVE = 19;
     boolean hasinit = false;
     final static int BLOCKN = 0;
     final static int BLOCKC = 1;
@@ -125,6 +134,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int RED = 1;
     final static int NOCOLOR = 2;
     int colorVal = NOCOLOR;
+    private boolean calibration_complete = false;
 
     public class Step {
         public double distance;
@@ -132,10 +142,10 @@ public abstract class MechBaseAutoOp extends OpMode {
         public double rightFrontPower;
         public double leftBackPower;
         public double rightBackPower;
-        public int rightFrontCounts;
-        public int leftFrontCounts;
-        public int rightBackCounts;
-        public int leftBackCounts;
+        public double rightFrontCounts;
+        public double leftFrontCounts;
+        public double rightBackCounts;
+        public double leftBackCounts;
         public int sweeperDirection;
         public double armPosition;
         public double turnAngle;
@@ -157,17 +167,17 @@ public abstract class MechBaseAutoOp extends OpMode {
                 rightBackPower = right;
             } else if (stepType == LEFT) {
                 turnAngle = -angle;
-                leftFrontPower = -left;
-                rightFrontPower = right;
-                leftBackPower = -left;
-                rightBackPower = right;
-
-            } else if (stepType == RIGHT) {
-                turnAngle = angle;
                 leftFrontPower = left;
                 rightFrontPower = -right;
                 leftBackPower = left;
                 rightBackPower = -right;
+
+            } else if (stepType == RIGHT) {
+                turnAngle = angle;
+                leftFrontPower = -left;
+                rightFrontPower = right;
+                leftBackPower = -left;
+                rightBackPower = right;
             } else if (stepType == BACK) {
                 rightFrontCounts = -(convertDistance(distance));
                 leftFrontCounts = rightFrontCounts;
@@ -210,22 +220,30 @@ public abstract class MechBaseAutoOp extends OpMode {
                 rightFrontPower = right;
                 leftBackPower = left;
                 rightBackPower = right;
-            } else {
+            }
+            else if (stepType == VUJKMOVE || stepType == VUMOVE ||stepType == JKMOVE) {
+                rightFrontCounts = convertDistance(distance);
+                leftFrontCounts = rightFrontCounts;
+                rightBackCounts = rightFrontCounts;
+                leftBackCounts = rightFrontCounts;
+                leftFrontPower = left;
+                rightFrontPower = right;
+                leftBackPower = left;
+                rightBackPower = right;
+            }
+            else {
                 armPosition = dist;
             }
         }
+    }
 
-        public int convertDistance(double distance) {
-            double rotations = distance / CIRCUMFERENCE;
-            double counts = ENCODER_CPR * rotations * GEAR_RATIO;
-            return (int) counts;
-        }
+    public static int convertDistance(double distance) {
+        double rotations = distance / CIRCUMFERENCE;
+        double counts = ENCODER_CPR * rotations * GEAR_RATIO;
+        return (int) counts;
     }
 
     public void initializeNavX(double angle) {
-
-        yawPIDController = new navXPIDController(navx_device,
-                navXPIDController.navXTimestampedDataSource.YAW);
         yawPIDController.setSetpoint(angle);
         yawPIDController.setContinuous(true);
         yawPIDController.setOutputRange(MIN_MOTOR_OUTPUT_VALUE, MAX_MOTOR_OUTPUT_VALUE);
@@ -264,26 +282,43 @@ public abstract class MechBaseAutoOp extends OpMode {
             ljk.setPosition(leftposition2);
             rg.setPosition(rightposition);
             lg.setPosition(leftposition);
+
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
                     NAVX_DIM_I2C_PORT,
                     AHRS.DeviceDataType.kProcessedData,
                     NAVX_DEVICE_UPDATE_RATE_HZ);
+            yawPIDController = new navXPIDController(navx_device,
+                    navXPIDController.navXTimestampedDataSource.YAW);
+            while ( !calibration_complete ) {
+            /* navX-Micro Calibration completes automatically ~15 seconds after it is
+            powered on, as long as the device is still.  To handle the case where the
+            navX-Micro has not been able to calibrate successfully, hold off using
+            the navX-Micro Yaw value until calibration is complete.
+             */
+                calibration_complete = !navx_device.isCalibrating();
+                if ( calibration_complete ) {
+                    navx_device.zeroYaw();
+                } else {
+                    telemetry.addData("navX-Micro", "Startup Calibration in Progress");
+                }
+            }
+
             steps = new Vector<Step>();
             initSteps();
             currentStep = steps.get(0);
             currentStepIndex = 0;
 
-            /*int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+            int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
             parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+            parameters.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
 
             parameters.vuforiaLicenseKey = "AYydEH3/////AAAAGXMATUMRIE4Pv8w0T+lHxs5Vah12gKSD60BBnydPYF3GeoUEUBpr9Q4NXikGwa+wLuElb3hZH2ujmFnni6yudqsshk91NxEEeOBZBscu60T3JbZVW05gvgAbxrAQgQRbMomuW3rFL/KhLVeOL+pb0k0DJEAsgTcoL7dahj1z/9tfrZC0vFDIW4qXsnzmjXRyT1MWXc8odL8npQI+FJZoyh8gpfGs6iuY6ZCi+QkjdlRIpsZnozIPCN5S9K1Zv8/3CnOmBz50I7x+fiZM9Soj3jbShvKQyfHRMTYX4b1DAspwJ6ekaU10UxtUeijN2pjfRv8jE857LRDmrBsuO6YBrlI9C49idhYLXADg8DlegTq4 ";
 
-            parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
             this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
             relicTrackables = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
             relicTemplate = relicTrackables.get(0);
-            relicTemplate.setName("relicVuMarkTemplate"); // can help in debugging; otherwise not necessary*/
+            relicTemplate.setName("relicVuMarkTemplate"); // can help in debugging; otherwise not necessary
         } else {
             telemetry.addData("Ignoring second click", "");
             telemetry.update();
@@ -320,11 +355,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                 initializeNavX(0);
 
             } else if (currentStep.sType == RIGHT || currentStep.sType == LEFT) {
-                state = TURNTOANGLE;
+                state = WAITFORTURN;
                 initializeNavX(currentStep.turnAngle);
                 setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
-
-
             } else if (currentStep.sType == TOUCHY) {
                 state = WAITFORTOUCH;
             } else if (currentStep.sType == MOVEARM) {
@@ -333,6 +366,21 @@ public abstract class MechBaseAutoOp extends OpMode {
                 resetEncoders();
             } else if (currentStep.sType == VUFORIA) {
                 state = VUCHECK;
+                counter = 0;
+            }
+            else if (currentStep.sType == VUMOVE){
+                state = SPECVU;
+            }
+            else if (currentStep.sType == JKMOVE){
+                state = SPECJK;
+            }
+            else if (currentStep.sType == VUJKMOVE){
+                state = SPECJKVU;
+            }
+            else if (currentStep.sType == RAISEBLOCK){
+                state = RAISE;
+                up.setPower(0.75);
+                counter = 0;
             }
             else if ( currentStep.sType == BLOCK){
                 state = DROPBLOCK;
@@ -347,7 +395,17 @@ public abstract class MechBaseAutoOp extends OpMode {
                     state = WAITFORCOUNTS;
                 }
             }
-        } else if (state == WAITFORCOUNTS) {
+        }
+        else if (state == WAITFORTURN){
+            if (navx_device.getYaw() != 0){
+                telemetry.addData("Still Zeroing","");
+                telemetry.update();
+            }
+            else{
+                state = TURNTOANGLE;
+            }
+        }
+        else if (state == WAITFORCOUNTS) {
             if (areCountsReached(currentStep.leftFrontCounts, currentStep.rightFrontCounts, currentStep.leftBackCounts, currentStep.rightBackCounts)) {
                 setMotorPower(0, 0, 0, 0);
                 rjk.setPosition(rightposition2);
@@ -395,7 +453,9 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
 
             }
-        } else if (state == WAITFORSIDE) {
+        }
+
+        else if (state == WAITFORSIDE) {
             if (areCountsReached(currentStep.leftFrontCounts, currentStep.rightFrontCounts, currentStep.leftBackCounts, currentStep.rightBackCounts)) {
                 setMotorPower(0, 0, 0, 0);
                 nextStep();
@@ -430,25 +490,27 @@ public abstract class MechBaseAutoOp extends OpMode {
                 telemetry.addData("Current yaw: ", yaw);
                 telemetry.update();
                 try {
-                    if ( yawPIDController.waitForNewUpdate(yawPIDResult, DEVICE_TIMEOUT_MS ) ) {
-                        if (!yawPIDResult.isOnTarget() ) {
+                    if (yawPIDController.waitForNewUpdate(yawPIDResult, DEVICE_TIMEOUT_MS)) {
+                        if (!yawPIDResult.isOnTarget()) {
                             double output = yawPIDResult.getOutput();
-                            if ( output < 0 ) {
+                            if (output < 0) {
                                 setMotorPower(-output, output, -output, output);
                             } else {
-                                setMotorPower(-output,output, -output, output);
+                                setMotorPower(-output, output, -output, output);
                             }
+                            telemetry.addData("NOt on target ", output);
+                            telemetry.update();
                         }
                     } else {
-                        Log.w("navXRotateToAnglePIDOp", "Yaw PID waitForNewUpdate() TIMEOUT.");
+                        Log.w("navXRotateToAnglePID Op", "Yaw PID waitForNewUpdate() TIMEOUT.");
                     }
                 } catch (InterruptedException e) {
 
                 }
-            }
-            else {
+            } else {
                 setMotorPower(0, 0, 0, 0);
                 nextStep();
+                navx_device.zeroYaw();
             }
 
         }
@@ -468,6 +530,16 @@ public abstract class MechBaseAutoOp extends OpMode {
                 counter = 0;
             }
         }
+        else if (state == RAISE){
+            if (counter < 100) {
+                counter++;
+            }
+            else {
+                counter = 0;
+                up.setPower(0);
+                nextStep();
+            }
+        }
         else if (state == DETECTCOLOR){
             if (currentStep.colorType == RED) {
                 if (colorRed.red() > 0) {
@@ -479,13 +551,14 @@ public abstract class MechBaseAutoOp extends OpMode {
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
                     telemetry.update();
+                    counter = 0;
                     state = WAITFORRESETENCODERS;
                 } else if (colorRed.blue() > 0) {
                     colorVal = BLUE;
                     telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
-
+                    counter = 0;
                 } else if (counter > 600) {
                     rjk.setPosition(rightposition2);
                     ljk.setPosition(leftposition2);
@@ -498,14 +571,15 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
             }
             else if (currentStep.colorType == BLUE){
-                if (colorBlue.blue() > 3) {
-                    colorVal = BLUE;
+                if (colorBlue.red() > 0) {
+                    colorVal = RED;
                     telemetry.addData("I'm getting red", colorBlue.red());
                     telemetry.update();
                     state = WAITFORRESETENCODERS;
+                    counter = 0;
 
-                } else if (colorBlue.red() > 3) {
-                    colorVal = RED;
+                } else if (colorBlue.blue() > 0) {
+                    colorVal = BLUE;
                     telemetry.addData("I'm getting blue", colorBlue.blue());
                     telemetry.update();
                     currentStep.distance = currentStep.distance * -1;
@@ -514,6 +588,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
                     currentStep.rightBackPower = currentStep.rightBackPower * -1;
                     state = WAITFORRESETENCODERS;
+                    counter = 0;
 
                 } else if (counter > 300) {
                     counter = 0;
@@ -527,47 +602,226 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
             }
         }
-        else if(state ==  VUCHECK){
-            /*relicTrackables.activate();
-            RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
-            if (vuMark == RelicRecoveryVuMark.UNKNOWN) {
-                telemetry.addData("VuForia is getting no readings","");
-                telemetry.update();
-                OpenGLMatrix pose = ((VuforiaTrackableDefaultListener)relicTemplate.getListener()).getPose();
-                if (pose != null) {
-                    VectorF trans = pose.getTranslation();
-                    Orientation rot = Orientation.getOrientation(pose, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                    double tX = trans.get(0);
-                    double tY = trans.get(1);
-                    double tZ = trans.get(2);
-                    double rX = rot.firstAngle;
-                    double rY = rot.secondAngle;
-                    double rZ = rot.thirdAngle;
+        else if (state == SPECJKVU){
+            double jewelMoveBack = convertDistance(2);
+            double jewelMoveForward = convertDistance(4.5);
+            double blockMoveExtra = convertDistance(9.5);
+            double blockMoveLess = convertDistance(6);
+
+            resetEncoders();
+            initializeNavX(0);
+            if (block == BLOCKR){
+                if (currentStep.colorType == RED) {
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + blockMoveLess;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + blockMoveLess;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + blockMoveLess;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + blockMoveLess;
                 }
-            }
-            else if (vuMark == RelicRecoveryVuMark.CENTER){
-                telemetry.addData("VuMark", "Center");
+                else if (currentStep.colorType == BLUE){
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                }
+                if (colorVal != currentStep.colorType){
+                    //go most
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+
+                }
+                else if (colorVal == currentStep.colorType){
+                    //go least
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                }
+                telemetry.addData("Getting block right",currentStep.distance);
                 telemetry.update();
+            }
+            else if (block == BLOCKC){
+                if (colorVal != currentStep.colorType){
+                    //go most
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+
+                }
+                else if (colorVal == currentStep.colorType){
+                    //go least
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                }
+                telemetry.addData("Getting block center",currentStep.distance);
+                telemetry.update();
+            }
+            else if (block == BLOCKL){
+                if (currentStep.colorType == RED) {
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - blockMoveExtra;
+                }
+                else if (currentStep.colorType == BLUE){
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + blockMoveLess;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + blockMoveLess;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + blockMoveLess;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + blockMoveLess;
+                }
+                if (colorVal != currentStep.colorType){
+                    //go most
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+
+                }
+                else if (colorVal == currentStep.colorType){
+                    //go least
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                }
+                telemetry.addData("Getting block left",currentStep.distance);
+                telemetry.update();
+            }
+            else{
+                if (colorVal != currentStep.colorType){
+                    //go most
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+
+                }
+                else if (colorVal == currentStep.colorType){
+                    //go least
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                }
+                telemetry.addData("Getting block none",currentStep.distance);
+                telemetry.update();
+            }
+            state = WAITFORRESETENCODERS;
+        }
+        else if (state == SPECJK){
+            double jewelMoveBack = convertDistance(2);
+            double jewelMoveForward = convertDistance(4.5);
+            resetEncoders();
+            initializeNavX(0);
+            if (colorVal != currentStep.colorType){
+                //go most
+                currentStep.rightFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                currentStep.leftFrontCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                currentStep.leftBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+                currentStep.rightBackCounts = currentStep.rightFrontCounts - jewelMoveBack;
+
+            }
+            else if (colorVal == currentStep.colorType){
+                //go least
+                currentStep.rightFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                currentStep.leftFrontCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                currentStep.leftBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+                currentStep.rightBackCounts = currentStep.rightFrontCounts + jewelMoveForward;
+            }
+            state = WAITFORRESETENCODERS;
+        }
+        else if (state == SPECVU){
+            double vuMoveExtra = convertDistance(9.5);
+            double vuMoveLess = convertDistance(6);
+
+            resetEncoders();
+            initializeNavX(0);
+            if (block == BLOCKR){
+                if (currentStep.colorType == RED) {
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + vuMoveLess;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + vuMoveLess;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + vuMoveLess;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + vuMoveLess;
+                }
+                else if (currentStep.colorType == BLUE){
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                }
+                telemetry.addData("Getting block right",currentStep.distance);
+                telemetry.update();
+            }
+            else if (block == BLOCKC){
+                telemetry.addData("Getting block center",currentStep.distance);
+                telemetry.update();
+            }
+            else if (block == BLOCKL){
+                if (currentStep.colorType == RED) {
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts - vuMoveExtra;
+                }
+                else if (currentStep.colorType == BLUE){
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + vuMoveLess;
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + vuMoveLess;
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + vuMoveLess;
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + vuMoveLess;
+                }
+                telemetry.addData("Getting block left",currentStep.distance);
+                telemetry.update();
+            }
+            else{
+                telemetry.addData("Getting block none",currentStep.distance);
+                telemetry.update();
+            }
+            state = WAITFORRESETENCODERS;
+        }
+        else if(state ==  VUCHECK){
+            relicTrackables.activate();
+            RelicRecoveryVuMark vuMark = RelicRecoveryVuMark.from(relicTemplate);
+            if (vuMark == RelicRecoveryVuMark.CENTER){
                 block = BLOCKC;
+                telemetry.addData("Center ", block);
+                telemetry.update();
                 devuforia();
                 nextStep();
+                navx_device.zeroYaw();
+
             }
             else if(vuMark ==  RelicRecoveryVuMark.LEFT){
-                telemetry.addData("VuMark", "Left");
-                telemetry.update();
                 block = BLOCKL;
+                telemetry.addData("Left ", block);
+                telemetry.update();
                 devuforia();
                 nextStep();
+                navx_device.zeroYaw();
+
             }
             else if(vuMark ==  RelicRecoveryVuMark.RIGHT){
-                telemetry.addData("VuMark", "Right");
-                telemetry.update();
                 block = BLOCKR;
+                telemetry.addData("Right ",block);
+                telemetry.update();
                 devuforia();
                 nextStep();
+                navx_device.zeroYaw();
+            }
+            else {
+                counter++;
+                if (counter > 500){
+                    nextStep();
+                    navx_device.zeroYaw();
+                    counter = 0;
+                }
+                telemetry.addData("VuForia is getting no readings","");
+                telemetry.update();
             }
             telemetry.update();
-            */
         }
         else if(state == DROPBLOCK){
             if (counter < 10) {
@@ -577,6 +831,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
             else {
                 counter = 0;
+                nextStep();
             }
 
         }
@@ -590,7 +845,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     }
     @Override
     public void stop(){
-        /*devuforia();*/
+        devuforia();
     }
 
     public void resetEncoders() {
@@ -608,7 +863,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                 rightBack.getCurrentPosition() == 0;
     }
 
-    public boolean areCountsReached(int leftFrontCounts, int rightFrontCounts, int leftBackCounts, int rightBackCounts) {
+    public boolean areCountsReached(double leftFrontCounts, double rightFrontCounts, double leftBackCounts, double rightBackCounts) {
         telemetry.addData("Is it negative?",leftFront.getCurrentPosition());
         return ( Math.abs(leftFront.getCurrentPosition()) >= Math.abs(leftFrontCounts) &&
                 Math.abs(rightFront.getCurrentPosition()) >= Math.abs(rightFrontCounts) &&
@@ -628,6 +883,7 @@ public abstract class MechBaseAutoOp extends OpMode {
         rightBack.setPower(rightBackPower);
     }
     public void nextStep(){
+        counter = 0;
         currentStepIndex = currentStepIndex + 1;
         if (currentStepIndex >= steps.size()) {
             state = FINISHED;
@@ -638,6 +894,6 @@ public abstract class MechBaseAutoOp extends OpMode {
     }
 
     public void devuforia(){
-        //relicTrackables.deactivate();
+        relicTrackables.deactivate();
     }
 }
