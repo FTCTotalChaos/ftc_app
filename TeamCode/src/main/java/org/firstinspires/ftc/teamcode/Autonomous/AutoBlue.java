@@ -28,7 +28,7 @@ public class AutoBlue extends MechBaseAutoOp {
         steps.add(new Step(0, 0 , 0, VUFORIA, 0, BLUE));
         steps.add(new Step(0, 0 , 0, RAISEBLOCK, 0, BLUE));
         steps.add(new Step(1, 0.1 , 0.1, MOVEARM, 0, BLUE));
-        steps.add(new Step(-31, -0.1 , -0.1, VUJKMOVE, 0, BLUE));
+        steps.add(new Step(-32, -0.1 , -0.1, VUJKMOVE, 0, BLUE));
         steps.add(new Step(0, 0.1, 0.1, LEFT, 90, BLUE));
         steps.add(new Step(-7, -0.1 , -0.1, MOVE, 0, BLUE));
         steps.add(new Step(-26, -0.1 , -0.1, DROPBLOCK, 0, BLUE));

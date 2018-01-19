@@ -47,11 +47,12 @@ public abstract class MechBaseAutoOp extends OpMode {
     Servo lextentions;
     Servo rg;
     Servo lg;
+    String string1;
     double position = 0;
     double rightposition = 0.575;
     double leftposition = 0.39;
-    double rightposition2 = 0.68;
-    double leftposition2 = 0.58;
+    double rightposition2 = 0.66;
+    double leftposition2 = 0.65;
     double position3 = 0;
     private final int NAVX_DIM_I2C_PORT = 0;
     private AHRS navx_device;
@@ -130,6 +131,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     int counter = 0;
     int counter2 = 0;
     int counter3 = 0;
+    double startYaw = 0;
     final static int BLUE = 0;
     final static int RED = 1;
     final static int NOCOLOR = 2;
@@ -357,7 +359,6 @@ public abstract class MechBaseAutoOp extends OpMode {
             } else if (currentStep.sType == RIGHT || currentStep.sType == LEFT) {
                 state = WAITFORTURN;
                 initializeNavX(currentStep.turnAngle);
-                setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
             } else if (currentStep.sType == TOUCHY) {
                 state = WAITFORTOUCH;
             } else if (currentStep.sType == MOVEARM) {
@@ -397,11 +398,14 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
         }
         else if (state == WAITFORTURN){
-            if (navx_device.getYaw() != 0){
-                telemetry.addData("Still Zeroing","");
+            startYaw = navx_device.getYaw();
+            if (startYaw != 0 && counter < 100){
+                telemetry.addData("Still Zeroing",startYaw);
                 telemetry.update();
+                counter++;
             }
             else{
+                setMotorPower(currentStep.leftFrontPower, currentStep.rightFrontPower, currentStep.leftBackPower, currentStep.rightBackPower);
                 state = TURNTOANGLE;
             }
         }
@@ -486,7 +490,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
 
             double yaw = navx_device.getYaw();
-            if (Math.abs(yaw - currentStep.turnAngle) >= 1) {
+            if (Math.abs(yaw - startYaw - currentStep.turnAngle) >= 1) {
                 telemetry.addData("Current yaw: ", yaw);
                 telemetry.update();
                 try {
@@ -510,7 +514,6 @@ public abstract class MechBaseAutoOp extends OpMode {
             } else {
                 setMotorPower(0, 0, 0, 0);
                 nextStep();
-                navx_device.zeroYaw();
             }
 
         }
@@ -545,7 +548,10 @@ public abstract class MechBaseAutoOp extends OpMode {
                 if (colorRed.red() > 0) {
                     colorVal = RED;
                     telemetry.addData("I'm getting red", colorRed.red());
-                    currentStep.distance = currentStep.distance * -1;
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + convertDistance(1);
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + convertDistance(1);
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
                     currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
@@ -582,7 +588,10 @@ public abstract class MechBaseAutoOp extends OpMode {
                     colorVal = BLUE;
                     telemetry.addData("I'm getting blue", colorBlue.blue());
                     telemetry.update();
-                    currentStep.distance = currentStep.distance * -1;
+                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
+                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
+                    currentStep.leftBackCounts = currentStep.rightFrontCounts + convertDistance(1);
+                    currentStep.rightBackCounts = currentStep.rightFrontCounts + convertDistance(1);
                     currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
                     currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
                     currentStep.leftBackPower = currentStep.leftBackPower * -1;
@@ -604,9 +613,9 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == SPECJKVU){
             double jewelMoveBack = convertDistance(2);
-            double jewelMoveForward = convertDistance(4.5);
-            double blockMoveExtra = convertDistance(9.5);
-            double blockMoveLess = convertDistance(6);
+            double jewelMoveForward = convertDistance(13);
+            double blockMoveExtra = convertDistance(5);
+            double blockMoveLess = convertDistance(7);
 
             resetEncoders();
             initializeNavX(0);
@@ -714,7 +723,7 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == SPECJK){
             double jewelMoveBack = convertDistance(2);
-            double jewelMoveForward = convertDistance(4.5);
+            double jewelMoveForward = convertDistance(13);
             resetEncoders();
             initializeNavX(0);
             if (colorVal != currentStep.colorType){
@@ -735,8 +744,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             state = WAITFORRESETENCODERS;
         }
         else if (state == SPECVU){
-            double vuMoveExtra = convertDistance(9.5);
-            double vuMoveLess = convertDistance(6);
+            double vuMoveExtra = convertDistance(5);
+            double vuMoveLess = convertDistance(7);
 
             resetEncoders();
             initializeNavX(0);
@@ -791,8 +800,6 @@ public abstract class MechBaseAutoOp extends OpMode {
                 telemetry.update();
                 devuforia();
                 nextStep();
-                navx_device.zeroYaw();
-
             }
             else if(vuMark ==  RelicRecoveryVuMark.LEFT){
                 block = BLOCKL;
@@ -800,7 +807,6 @@ public abstract class MechBaseAutoOp extends OpMode {
                 telemetry.update();
                 devuforia();
                 nextStep();
-                navx_device.zeroYaw();
 
             }
             else if(vuMark ==  RelicRecoveryVuMark.RIGHT){
@@ -809,13 +815,11 @@ public abstract class MechBaseAutoOp extends OpMode {
                 telemetry.update();
                 devuforia();
                 nextStep();
-                navx_device.zeroYaw();
             }
             else {
                 counter++;
                 if (counter > 500){
                     nextStep();
-                    navx_device.zeroYaw();
                     counter = 0;
                 }
                 telemetry.addData("VuForia is getting no readings","");

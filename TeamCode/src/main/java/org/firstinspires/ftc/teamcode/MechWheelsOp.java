@@ -71,7 +71,7 @@ public class MechWheelsOp extends OpMode {
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
-    double rightposition = 0.575;
+    double rightposition = 0.9;
     double leftposition = 0.39;
     double rightposition2 = 0.694;
     double leftposition2 = 0.64;
@@ -189,7 +189,7 @@ public class MechWheelsOp extends OpMode {
             ljk.setPosition(0);
         }
         if (gamepad2.right_trigger>0) {
-            rg.setPosition(0.15);
+            rg.setPosition(0.37);
             lg.setPosition(0.77);
         }
         else if (gamepad2.left_trigger>0) {

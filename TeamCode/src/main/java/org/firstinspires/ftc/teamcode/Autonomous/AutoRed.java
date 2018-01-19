@@ -25,7 +25,7 @@ public class AutoRed extends MechBaseAutoOp {
         steps.add(new Step(0, 0 , 0, VUFORIA, 0, RED));
         steps.add(new Step(0, 0 , 0, RAISEBLOCK, 0, RED));
         steps.add(new Step(1, 0.1 , 0.1, MOVEARM, 0, RED));
-        steps.add(new Step(-31, -0.1 , -0.1, VUJKMOVE, 0, RED));
+        steps.add(new Step(-32, -0.1 , -0.1, VUJKMOVE, 0, RED));
         steps.add(new Step(0, 0.1, 0.1, RIGHT, 90, RED));
         steps.add(new Step(-7, -0.1 , -0.1, MOVE, 0, RED));
         steps.add(new Step(-26, -0.1 , -0.1, DROPBLOCK, 0, RED));
