@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -68,15 +69,20 @@ public class MechWheelsOp extends OpMode {
     public Servo lg;
     public Servo rjk;
     public Servo ljk;
+    public Servo rjr;
+    public Servo ljr;
+    public Servo trg;
+    public Servo tlg;
+    public ColorSensor colorBlue;
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
-    double rightposition = 0.9;
-    double leftposition = 0.39;
-    double rightposition2 = 0.694;
+    double rightposition = 1;
+    double leftposition = 0.09;
+    double rightposition2 = 0.3;
     double leftposition2 = 0.64;
-    double rightposition3 = 0.5;
-    double leftposition3 = 0.5;
+    double rightposition3 = 0.61;
+    double leftposition3 = 0.79;
     final static double FAST = 1.0;
     final static double MED_FAST = 0.75;
     final static double MEDIUM = 0.5;
@@ -84,6 +90,7 @@ public class MechWheelsOp extends OpMode {
     double armMode = MEDIUM;
     double mode = FAST;
     double upPos = 0;
+    int targetPosittion = 0;
 
     double flapPosition = 1;
 
@@ -98,6 +105,11 @@ public class MechWheelsOp extends OpMode {
         lg = hardwareMap.get(Servo.class, "lg");
         rjk = hardwareMap.get(Servo.class, "rjk");
         ljk = hardwareMap.get(Servo.class, "ljk");
+        rjr = hardwareMap.get(Servo.class, "rjr");
+        ljr = hardwareMap.get(Servo.class, "ljr");
+        colorBlue = hardwareMap.get(ColorSensor.class, "cb");
+        tlg = hardwareMap.get(Servo.class, "tlg");
+        trg = hardwareMap.get(Servo.class, "trg");
         //Slidy = hardwareMap.get(CRServo.class, "sc");
         //rsg = hardwareMap.get(CRServo.class, "rsg");
         //lsg = hardwareMap.get(CRServo.class, "lsg");
@@ -112,6 +124,10 @@ public class MechWheelsOp extends OpMode {
         ljk.setPosition(leftposition2);
         lg.setPosition(leftposition);
         rg.setPosition(rightposition);
+        rjr.setPosition(rightposition3);
+        ljr.setPosition(leftposition3);
+        tlg.setPosition(leftposition);
+        trg.setPosition(rightposition);
     }
     @Override
     public void start(){
@@ -141,8 +157,43 @@ public class MechWheelsOp extends OpMode {
         else {
             iSawDpadDownAlready = false;
         }
+        if (gamepad1.dpad_up) {
+            if(!iSawDpadUpAlready2) {
+                iSawDpadUpAlready2 = true;
+                targetPosittion = targetPosittion + 100;
+                up.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                up.setPower(0.5);
+            }
+        }
+        else {
+            iSawDpadUpAlready2 = false;
+        }
+        if (gamepad1.dpad_down) {
+            if(!iSawDpadDownAlready2) {
+                iSawDpadDownAlready2 = true;
+                targetPosittion = targetPosittion - 100;
+                up.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                up.setPower(-0.5);
+            }
+        }
+        else {
+            iSawDpadDownAlready2 = false;
+        }
+        up.setTargetPosition(targetPosittion);
+        up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        if (!up.isBusy()){
+            up.setPower(0);
+        }
+        if (gamepad1.left_trigger > 0){
+            mode = 0.25;
+        }
+        else {
+            mode = 0.5;
+        }
+        if (gamepad1.right_trigger > 0){
+            mode = 0.75;
+        }
         mode = Range.clip(mode, 0.25, 0.75 );
-
 
         double forward = gamepad1.left_stick_y;
         double side = gamepad1.left_stick_x;
@@ -155,10 +206,10 @@ public class MechWheelsOp extends OpMode {
                 rf.setPower(forward*mode);
                 rb.setPower(forward*mode);
             } else if (Math.abs(side) > Math.abs(forward)) {
-                rf.setPower(side*mode);
-                lf.setPower(-side*mode);
-                rb.setPower(-side*mode);
-                lb.setPower(side*mode);
+                rf.setPower(side*mode*2);
+                lf.setPower(-side*mode*2);
+                rb.setPower(-side*mode*2);
+                lb.setPower(side*mode*2);
             } else if (turn > 0) {
                 lf.setPower(-turn*mode);
                 lb.setPower(-turn*mode);
@@ -189,12 +240,24 @@ public class MechWheelsOp extends OpMode {
             ljk.setPosition(0);
         }
         if (gamepad2.right_trigger>0) {
-            rg.setPosition(0.37);
-            lg.setPosition(0.77);
+            rg.setPosition(0.4);
+            lg.setPosition(0.69);
         }
         else if (gamepad2.left_trigger>0) {
-            rg.setPosition(0.575);
-            lg.setPosition(0.39);
+            rg.setPosition(1);
+            lg.setPosition(0.09);
+        }
+        if (gamepad2.right_bumper){
+            trg.setPosition(0.4);
+            tlg.setPosition(0.69);
+        }
+        else if (gamepad2.left_bumper){
+            trg.setPosition(1);
+            tlg.setPosition(0.09);
+        }
+        else if (gamepad2.left_stick_button){
+            rjr.setPosition(rightposition3);
+            ljr.setPosition(leftposition3);
         }
         /*if (gamepad2.right_trigger > 0){
             rsg.setPower(0.5);
@@ -210,6 +273,9 @@ public class MechWheelsOp extends OpMode {
         }*/
         upPos = gamepad2.right_stick_y;
         up.setPower(upPos);
+        telemetry.addData("color value blue", colorBlue.blue());
+        telemetry.addData("color value red", colorBlue.red());
+
 
 
     }

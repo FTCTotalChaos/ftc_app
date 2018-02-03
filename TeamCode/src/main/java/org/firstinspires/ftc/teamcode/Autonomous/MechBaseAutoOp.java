@@ -43,6 +43,8 @@ public abstract class MechBaseAutoOp extends OpMode {
     DcMotor up;
     Servo rjk;
     Servo ljk;
+    Servo rjr;
+    Servo ljr;
     Servo rextention;
     Servo lextentions;
     Servo rg;
@@ -90,19 +92,22 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int TURNTOANGLE = 6;
     final static int JEWELKNOCK = 7;
     final static int VUCHECK = 8;
-    final static int TURNEXTENTION = 9;
+    final static int TURNARM = 9;
     final static int WAITFORSIDE = 10;
     final static int DROPBLOCK = 11;
     final static int RAISE = 12;
     final static int SPECJKVU = 13;
     final static int SPECJK = 14;
     final static int SPECVU = 15;
+    final static int SPECTURN = 16;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
     final static double GEAR_RATIO = 0.5;
     final static double WHEEL_DIAMETER = 4;
     final static double CIRCUMFERENCE = Math.PI * WHEEL_DIAMETER;
     //Start step types
+    double rightposition3 = 0.61;
+    double leftposition3 = 0.79;
     final static int MOVE = 1;
     final static int RIGHT = 2;
     final static int LEFT = 3;
@@ -120,8 +125,9 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int TOUCHY = 17;
     final static int RAISEBLOCK = 18;
     final static int VUJKMOVE = 19;
-    final static int JKMOVE = 19;
-    final static int VUMOVE = 19;
+    final static int JKMOVE = 20;
+    final static int VUMOVE = 21;
+    final static int VUTURN = 22;
     boolean hasinit = false;
     final static int BLOCKN = 0;
     final static int BLOCKC = 1;
@@ -174,7 +180,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                 leftBackPower = left;
                 rightBackPower = -right;
 
-            } else if (stepType == RIGHT) {
+            } else if (stepType == RIGHT || stepType == VUTURN) {
                 turnAngle = angle;
                 leftFrontPower = -left;
                 rightFrontPower = right;
@@ -268,6 +274,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             colorRed = hardwareMap.get(ColorSensor.class, "cr");
             colorRed.setI2cAddress(I2cAddr.create8bit(0x4c) );
             colorBlue.setI2cAddress(I2cAddr.create8bit(0x3c) );
+            rjr = hardwareMap.get(Servo.class, "rjr");
+            ljr = hardwareMap.get(Servo.class, "ljr");
             //touchRed = hardwareMap.get(TouchSensor.class, "tr");
             //touchBlue = hardwareMap.get(TouchSensor.class, "tb");
             //rs = hardwareMap.get(DcMotor.class, "rs");
@@ -284,6 +292,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             ljk.setPosition(leftposition2);
             rg.setPosition(rightposition);
             lg.setPosition(leftposition);
+            rjr.setPosition(rightposition3);
+            ljr.setPosition(leftposition3);
 
             navx_device = AHRS.getInstance(hardwareMap.deviceInterfaceModule.get("navx"),
                     NAVX_DIM_I2C_PORT,
@@ -377,6 +387,9 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
             else if (currentStep.sType == VUJKMOVE){
                 state = SPECJKVU;
+            }
+            else if (currentStep.sType == VUTURN){
+                state = SPECTURN;
             }
             else if (currentStep.sType == RAISEBLOCK){
                 state = RAISE;
@@ -490,7 +503,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
 
             double yaw = navx_device.getYaw();
-            if (Math.abs(yaw - startYaw - currentStep.turnAngle) >= 1) {
+            if (Math.abs(yaw - startYaw - currentStep.turnAngle) >= 2) {
                 telemetry.addData("Current yaw: ", yaw);
                 telemetry.update();
                 try {
@@ -517,11 +530,35 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
 
         }
+        else if (state == SPECTURN){
+            if (currentStep.turnAngle<0) {
+                if (block == BLOCKL) {
+                    currentStep.turnAngle = Math.abs(currentStep.turnAngle) - 22;
+                    state = TURNTOANGLE;
+                }
+                if (block == BLOCKR){
+                    currentStep.turnAngle = Math.abs(currentStep.turnAngle) + 18;
+                    state = TURNTOANGLE;
+                }
+            }
+            else if (currentStep.turnAngle > 0){
+                if (block == BLOCKL) {
+                    currentStep.turnAngle = Math.abs(currentStep.turnAngle) + 18;
+                    state = TURNTOANGLE;
+                }
+                if (block == BLOCKR){
+                    currentStep.turnAngle = Math.abs(currentStep.turnAngle) - 22;
+                    state = TURNTOANGLE;
+                }
+            }
+
+
+        }
         else if (state == JEWELKNOCK){
             if (counter < 150) {
                 counter++;
                 if (currentStep.colorType == RED) {
-                    rjk.setPosition(0);
+                    rjk.setPosition(1);
                 } else if (currentStep.colorType == BLUE) {
                     ljk.setPosition(0);
                 }
@@ -544,30 +581,41 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
         }
         else if (state == DETECTCOLOR){
-            if (currentStep.colorType == RED) {
+            /*if (currentStep.colorType == RED) {
                 if (colorRed.red() > 0) {
                     colorVal = RED;
+
                     telemetry.addData("I'm getting red", colorRed.red());
-                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.leftBackCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.rightBackCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
-                    currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
-                    currentStep.leftBackPower = currentStep.leftBackPower * -1;
-                    currentStep.rightBackPower = currentStep.rightBackPower * -1;
-                    telemetry.update();
-                    counter = 0;
-                    state = WAITFORRESETENCODERS;
+                    if (counter < 2) {
+                        rjr.setPosition(0.75);
+                    }
+                    else {
+                        nextStep();
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                    }
                 } else if (colorRed.blue() > 0) {
                     colorVal = BLUE;
                     telemetry.addData("I'm getting blue", colorRed.blue());
                     telemetry.update();
-                    state = WAITFORRESETENCODERS;
-                    counter = 0;
+                    if (counter <2) {
+                        rjr.setPosition(0.35);
+                        counter++;
+                    }
+                    else {
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                        nextStep();
+                    }
                 } else if (counter > 600) {
                     rjk.setPosition(rightposition2);
                     ljk.setPosition(leftposition2);
+                    rjr.setPosition(rightposition3);
+                    ljr.setPosition(leftposition3);
                     counter = 0;
                     nextStep();
                 } else {
@@ -578,27 +626,30 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
             else if (currentStep.colorType == BLUE){
                 if (colorBlue.red() > 0) {
-                    colorVal = RED;
-                    telemetry.addData("I'm getting red", colorBlue.red());
-                    telemetry.update();
-                    state = WAITFORRESETENCODERS;
-                    counter = 0;
+
+                    if (counter < 2) {
+                        ljr.setPosition(0.69);
+                        counter++;
+                    }
+                    else {
+                        nextStep();
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                    }
 
                 } else if (colorBlue.blue() > 0) {
-                    colorVal = BLUE;
-                    telemetry.addData("I'm getting blue", colorBlue.blue());
-                    telemetry.update();
-                    currentStep.rightFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.leftFrontCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.leftBackCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.rightBackCounts = currentStep.rightFrontCounts + convertDistance(1);
-                    currentStep.leftFrontPower = currentStep.leftFrontPower * -1;
-                    currentStep.rightFrontPower = currentStep.rightFrontPower * -1;
-                    currentStep.leftBackPower = currentStep.leftBackPower * -1;
-                    currentStep.rightBackPower = currentStep.rightBackPower * -1;
-                    state = WAITFORRESETENCODERS;
-                    counter = 0;
-
+                    if (counter < 2) {
+                        ljr.setPosition(1);
+                    }
+                    else {
+                        nextStep();
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                    }
                 } else if (counter > 300) {
                     counter = 0;
                     rjk.setPosition(rightposition2);
@@ -609,11 +660,90 @@ public abstract class MechBaseAutoOp extends OpMode {
                     telemetry.addData("Not getting anything", colorBlue.blue());
                     counter++;
                 }
+
+            }
+            */
+            if (colorRed.red() > 0 || colorBlue.red() > 0) {
+                colorVal = RED;
+                telemetry.addData("Getting Red", "");
+                nextStep();
+                state = MOVEARM;
+            }
+            else if (colorBlue.blue() > 0 || colorRed.blue() > 0){
+                colorVal = BLUE;
+                telemetry.addData("Getting blue", "");
+                state = MOVEARM;
+            }
+            else if (counter > 300){
+                rjk.setPosition(rightposition2);
+                ljk.setPosition(leftposition2);
+                rjr.setPosition(rightposition3);
+                ljr.setPosition(leftposition3);
+                nextStep();
+            }
+            else{
+                telemetry.addData("Not getting anything worthless trash color sensor","");
+            }
+        }
+        else if (state == MOVEARM){
+            if (currentStep.colorType == RED){
+                if (colorVal == RED){
+                    if (counter < 10) {
+                        rjr.setPosition(0.75);
+                    }
+                    else {
+                        nextStep();
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                    }
+                }
+                else if (colorVal == BLUE){
+                    if (counter <10) {
+                        rjr.setPosition(0.35);
+                        counter++;
+                    }
+                    else {
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                        nextStep();
+                    }
+                }
+            }
+            else if (currentStep.colorType == BLUE){
+                if (colorVal == BLUE){
+                    if (counter < 10) {
+                        ljr.setPosition(1);
+                    }
+                    else {
+                        nextStep();
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                    }
+                }
+                else if (colorVal == RED){
+                    if (counter < 10) {
+                        ljr.setPosition(0.69);
+                        counter++;
+                    }
+                    else {
+                        nextStep();
+                        rjk.setPosition(rightposition2);
+                        ljk.setPosition(leftposition2);
+                        rjr.setPosition(rightposition3);
+                        ljr.setPosition(leftposition3);
+                    }
+                }
             }
         }
         else if (state == SPECJKVU){
             double jewelMoveBack = convertDistance(2);
-            double jewelMoveForward = convertDistance(13);
+            double jewelMoveForward = convertDistance(5);
             double blockMoveExtra = convertDistance(5);
             double blockMoveLess = convertDistance(7);
 
@@ -722,8 +852,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             state = WAITFORRESETENCODERS;
         }
         else if (state == SPECJK){
-            double jewelMoveBack = convertDistance(2);
-            double jewelMoveForward = convertDistance(13);
+            double jewelMoveBack = convertDistance(1);
+            double jewelMoveForward = convertDistance(3.5);
             resetEncoders();
             initializeNavX(0);
             if (colorVal != currentStep.colorType){
@@ -744,8 +874,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             state = WAITFORRESETENCODERS;
         }
         else if (state == SPECVU){
-            double vuMoveExtra = convertDistance(5);
-            double vuMoveLess = convertDistance(7);
+            double vuMoveExtra = convertDistance(4);
+            double vuMoveLess = convertDistance(8);
 
             resetEncoders();
             initializeNavX(0);
