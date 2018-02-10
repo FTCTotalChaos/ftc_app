@@ -56,7 +56,6 @@ import com.qualcomm.robotcore.util.Range;
 @TeleOp(name = "Ghost", group = "Ghost")
 public class MechWheelsOp extends OpMode {
 
-    double armDelta = 0.01;
     boolean iSawDpadUpAlready = false;
     boolean iSawDpadDownAlready = false;
     boolean iSawDpadUpAlready2 = false;
@@ -73,16 +72,20 @@ public class MechWheelsOp extends OpMode {
     public Servo ljr;
     public Servo trg;
     public Servo tlg;
+    public Servo re;
+    public Servo le;
     public ColorSensor colorBlue;
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
     double rightposition = 1;
-    double leftposition = 0.09;
-    double rightposition2 = 0.3;
+    double leftposition = 0.05;
+    double rightposition2 = 0;
     double leftposition2 = 0.64;
     double rightposition3 = 0.61;
     double leftposition3 = 0.79;
+    double rightposition4 = 0.16;
+    double leftposition4 = 0.77;
     final static double FAST = 1.0;
     final static double MED_FAST = 0.75;
     final static double MEDIUM = 0.5;
@@ -113,21 +116,21 @@ public class MechWheelsOp extends OpMode {
         //Slidy = hardwareMap.get(CRServo.class, "sc");
         //rsg = hardwareMap.get(CRServo.class, "rsg");
         //lsg = hardwareMap.get(CRServo.class, "lsg");
-        //rs = hardwareMap.get(CRServo.class, "rs");
-        //ls = hardwareMap.get(CRServo.class, "ls");
-        //rextention = hardwareMap.get(Servo.class, "re");
-        //lextentions = hardwareMap.get(Servo.class, "le");
+        re = hardwareMap.get(Servo.class, "re");
+        le = hardwareMap.get(Servo.class, "le");
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
         rb.setDirection(DcMotorSimple.Direction.REVERSE);
-        up.setDirection(DcMotorSimple.Direction.REVERSE);
+        //up.setDirection(DcMotorSimple.Direction.REVERSE);
         rjk.setPosition(rightposition2);
         ljk.setPosition(leftposition2);
-        lg.setPosition(leftposition);
-        rg.setPosition(rightposition);
+        lg.setPosition(0.9);
+        rg.setPosition(0.1);
         rjr.setPosition(rightposition3);
         ljr.setPosition(leftposition3);
         tlg.setPosition(leftposition);
         trg.setPosition(rightposition);
+        re.setPosition(rightposition4);
+        le.setPosition(leftposition4);
     }
     @Override
     public void start(){
@@ -152,6 +155,7 @@ public class MechWheelsOp extends OpMode {
             if(!iSawDpadDownAlready) {
                 iSawDpadDownAlready = true;
                 mode = mode - 0.25;
+
             }
         }
         else {
@@ -161,8 +165,9 @@ public class MechWheelsOp extends OpMode {
             if(!iSawDpadUpAlready2) {
                 iSawDpadUpAlready2 = true;
                 targetPosittion = targetPosittion + 100;
-                up.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                up.setPower(0.5);
+                up.setTargetPosition(targetPosittion);
+                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                up.setPower(1);
             }
         }
         else {
@@ -172,17 +177,17 @@ public class MechWheelsOp extends OpMode {
             if(!iSawDpadDownAlready2) {
                 iSawDpadDownAlready2 = true;
                 targetPosittion = targetPosittion - 100;
-                up.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                up.setPower(-0.5);
+                up.setTargetPosition(targetPosittion);
+                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                up.setPower(-1);
             }
         }
         else {
             iSawDpadDownAlready2 = false;
         }
-        up.setTargetPosition(targetPosittion);
-        up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         if (!up.isBusy()){
             up.setPower(0);
+            up.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         if (gamepad1.left_trigger > 0){
             mode = 0.25;
@@ -227,38 +232,45 @@ public class MechWheelsOp extends OpMode {
                 rf.setPower(0);
             }
         }
-        if (gamepad2.y){
+        if (gamepad1.y){
             rjk.setPosition(rightposition2);
         }
-        if (gamepad2.b){
+        if (gamepad1.b){
             ljk.setPosition(leftposition2);
         }
-        if (gamepad2.a){
+        if (gamepad1.a){
             rjk.setPosition(0);
         }
-        if (gamepad2.x){
+        if (gamepad1.x) {
             ljk.setPosition(0);
         }
-        if (gamepad2.right_trigger>0) {
-            rg.setPosition(0.4);
-            lg.setPosition(0.69);
+        else if (gamepad2.left_stick_button){
+            rjr.setPosition(rightposition3);
+            ljr.setPosition(leftposition3);
         }
-        else if (gamepad2.left_trigger>0) {
+        if (gamepad2.right_trigger>0) {
             rg.setPosition(1);
             lg.setPosition(0.09);
+        }
+        else if (gamepad2.left_trigger>0) {
+            rg.setPosition(0.1);
+            lg.setPosition(0.9);
         }
         if (gamepad2.right_bumper){
             trg.setPosition(0.4);
             tlg.setPosition(0.69);
         }
         else if (gamepad2.left_bumper){
-            trg.setPosition(1);
-            tlg.setPosition(0.09);
+            trg.setPosition(rightposition);
+            tlg.setPosition(leftposition);
         }
-        else if (gamepad2.left_stick_button){
-            rjr.setPosition(rightposition3);
-            ljr.setPosition(leftposition3);
+        if (gamepad2.x){
+            rg.setPosition(0.25);
+            lg.setPosition(0.75);
+            trg.setPosition(0.85);
+            tlg.setPosition(0.25);
         }
+
         /*if (gamepad2.right_trigger > 0){
             rsg.setPower(0.5);
             lsg.setPower(-0.5);
@@ -271,6 +283,14 @@ public class MechWheelsOp extends OpMode {
             rsg.setPower(0);
             lsg.setPower(0);
         }*/
+        if (gamepad2.a){
+            re.setPosition(0.87);
+            le.setPosition(0.12);
+        }
+        else if (gamepad2.y){
+            re.setPosition(rightposition4);
+            le.setPosition(leftposition4);
+        }
         upPos = gamepad2.right_stick_y;
         up.setPower(upPos);
         telemetry.addData("color value blue", colorBlue.blue());
@@ -279,126 +299,6 @@ public class MechWheelsOp extends OpMode {
 
 
     }
-
-
-
-       /*
-       //q1
-       if (side > 0 && forward >  0) {
-           leftFront.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           rightBack.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           leftBack.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-           rightFront.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-       } else if (side == 0 && forward == 0) {
-           leftBack.setPower(0);
-           leftFront.setPower(0);
-           rightBack.setPower(0);
-           rightFront.setPower(0);
-
-       }
-       //q4
-       else if (side < 0 && forward > 0) {
-           leftBack.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           rightFront.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           leftFront.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-           rightBack.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-       }//q2
-       else
-       if (side > 0 && forward < 0) {
-           leftBack.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           rightFront.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           leftFront.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-           leftBack.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-       } else if (side == 0 && forward == 0) {
-           leftBack.setPower(0);
-           leftFront.setPower(0);
-           rightBack.setPower(0);
-           rightFront.setPower(0);
-       }
-       //q3
-       if (side < 0 && forward < 0) {
-           leftFront.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           rightBack.setPower(
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))));
-           leftBack.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-           rightFront.setPower((
-                   (Math.sqrt(
-                           (gamepad1.left_stick_x * gamepad1.left_stick_x
-                                   + gamepad1.left_stick_y * gamepad1.left_stick_y))) *
-                           Math.tanh((gamepad1.left_stick_y / gamepad1.left_stick_x) - 45)) / 45);
-       } else if (side == 0 && forward == 0) {
-           leftBack.setPower(0);
-           leftFront.setPower(0);
-           rightBack.setPower(0);
-           rightFront.setPower(0);
-       }
-   }
-       /*
-       right = (double)scaleInput(right);
-       left =  (double)scaleInput(left);
-
-       right= Range.clip(right, -mode, mode);
-       left= Range.clip(left, -mode, mode);
-
-
-       leftFront.setPower(left);
-       leftBack.setPower(left);
-       rightFront.setPower(right);
-       rightBack.setPower(right);
-
-   }
-*/
 
     @Override
     public void stop()

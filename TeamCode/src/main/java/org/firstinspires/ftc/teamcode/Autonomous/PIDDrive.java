@@ -25,7 +25,7 @@ public class PIDDrive extends MechBaseAutoOp {
 
     @Override
     public void initSteps(){
-        steps.add(new Step(10, 0.1 , 0.1, MOVEARM, 0, RED));
+        /*steps.add(new Step(10, 0.1 , 0.1, MOVEARM, 0, RED));
         if (colorVal == RED){
             steps.add(new Step(-26, -0.1 , -0.1, MOVE, 0, RED));
         }
@@ -37,7 +37,7 @@ public class PIDDrive extends MechBaseAutoOp {
         }
         steps.add(new Step(0, 0.1, 0.1, RIGHT, 90, RED));
         steps.add(new Step(-4, -0.1 , -0.1, MOVE, 0, RED));
-        steps.add(new Step(-26, -0.1 , -0.1, DROPBLOCK, 0, RED));
+        steps.add(new Step(-26, -0.1 , -0.1, DROPBLOCK, 0, RED));*/
 
 
     }
