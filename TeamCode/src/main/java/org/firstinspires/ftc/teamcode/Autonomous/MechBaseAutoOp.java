@@ -111,6 +111,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int SPECVU = 15;
     final static int SPECTURN = 16;
     final static int WAITFORTOUCH = 17;
+    final static int NEWSPECTURN = 16;
     final static int GRAB = 18;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
@@ -139,7 +140,8 @@ public abstract class MechBaseAutoOp extends OpMode {
         VUMOVE,
         VUTURN,
         GRABBLOCK,
-        GOTUTOUCH
+        GOTUTOUCH,
+        NEWVUTURN
     };
     boolean hasinit = false;
     final static int BLOCKN = 0;
@@ -186,14 +188,14 @@ public abstract class MechBaseAutoOp extends OpMode {
                 rightFrontPower = right;
                 leftBackPower = left;
                 rightBackPower = right;
-            } else if (stepType == StepType.LEFT || (stepType == StepType.VUTURN && col == RED)) {
+            } else if (stepType == StepType.LEFT || (stepType == StepType.VUTURN && col == RED) || (stepType == StepType.NEWVUTURN && col == BLUE)) {
                 turnAngle = -angle;
                 leftFrontPower = left;
                 rightFrontPower = -right;
                 leftBackPower = left;
                 rightBackPower = -right;
 
-            } else if (stepType == StepType.RIGHT || (stepType == StepType.VUTURN && col == BLUE)) {
+            } else if (stepType == StepType.RIGHT || (stepType == StepType.VUTURN && col == BLUE) || (stepType == StepType.NEWVUTURN && col == RED)) {
                 turnAngle = angle;
                 leftFrontPower = -left;
                 rightFrontPower = right;
@@ -368,6 +370,8 @@ public abstract class MechBaseAutoOp extends OpMode {
         int count = 0;
         rg.setPosition(1);
         lg.setPosition(0.09);
+        trg.setPosition(0.4);
+        tlg.setPosition(0.69);
     }
     @Override
     public void loop() {
@@ -413,6 +417,11 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
             else if (currentStep.sType == StepType.VUTURN){
                 state = SPECTURN;
+                telemetry.addData("SPECTURN","SPEC");
+                telemetry.update();
+            }
+            else if (currentStep.sType == StepType.NEWVUTURN){
+                state = NEWSPECTURN;
                 telemetry.addData("SPECTURN","SPEC");
                 telemetry.update();
             }
@@ -532,7 +541,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
 
             double yaw = navx_device.getYaw();
-            if (Math.abs(yaw - startYaw - currentStep.turnAngle) >= 2) {
+            if (Math.abs(yaw - startYaw - currentStep.turnAngle) >= 2.5) {
                 telemetry.addData("Current yaw: ", yaw);
                 Log.w("Current yaw: ", Double.toString(yaw));
                 telemetry.update();
@@ -555,6 +564,8 @@ public abstract class MechBaseAutoOp extends OpMode {
                             telemetry.update();
                         }
                     } else {
+                        telemetry.addData("NOT GETTING UPDATE","DONT FREAK OUT ITS ALL GOOD");
+                        telemetry.update();
                         Log.w("navXRotateToAnglePID Op", "Yaw PID waitForNewUpdate() TIMEOUT.");
                         setMotorPower(0,0,0,0);
                         hasStopped = true;
@@ -572,6 +583,28 @@ public abstract class MechBaseAutoOp extends OpMode {
         }
         else if (state == SPECTURN){
             if (currentStep.colorType == RED) {
+                if (block == BLOCKL) {
+                    currentStep.turnAngle = currentStep.turnAngle - 20;
+                    state = WAITFORTURN;
+                    telemetry.addData("TURNING","TO BLOCKL");
+                    telemetry.update();
+                    initializeNavX(currentStep.turnAngle);
+                }
+                else if (block == BLOCKR){
+                    currentStep.turnAngle = currentStep.turnAngle + 10;
+                    state = WAITFORTURN;
+                    telemetry.addData("TURNING","TO BLOCKL");
+                    telemetry.update();
+                    initializeNavX(currentStep.turnAngle);
+                }
+                else {
+                    state = WAITFORTURN;
+                    telemetry.addData("TURNING","TO BLOCKL");
+                    telemetry.update();
+                    initializeNavX(currentStep.turnAngle);
+                }
+            }
+            else if (currentStep.colorType == BLUE){
                 if (block == BLOCKL) {
                     currentStep.turnAngle = currentStep.turnAngle - 10;
                     state = WAITFORTURN;
@@ -593,16 +626,40 @@ public abstract class MechBaseAutoOp extends OpMode {
                     initializeNavX(currentStep.turnAngle);
                 }
             }
-            else if (currentStep.colorType == BLUE){
+        }
+        else if (state == NEWSPECTURN){
+            if (currentStep.colorType == RED) {
                 if (block == BLOCKL) {
-                    currentStep.turnAngle = currentStep.turnAngle - 20;
+                    currentStep.turnAngle = currentStep.turnAngle - 5;
                     state = WAITFORTURN;
                     telemetry.addData("TURNING","TO BLOCKL");
                     telemetry.update();
                     initializeNavX(currentStep.turnAngle);
                 }
                 else if (block == BLOCKR){
-                    currentStep.turnAngle = currentStep.turnAngle + 10;
+                    currentStep.turnAngle = currentStep.turnAngle + 25;
+                    state = WAITFORTURN;
+                    telemetry.addData("TURNING","TO BLOCKL");
+                    telemetry.update();
+                    initializeNavX(currentStep.turnAngle);
+                }
+                else {
+                    state = WAITFORTURN;
+                    telemetry.addData("TURNING","TO BLOCKL");
+                    telemetry.update();
+                    initializeNavX(currentStep.turnAngle);
+                }
+            }
+            else if (currentStep.colorType == BLUE){
+                if (block == BLOCKL) {
+                    currentStep.turnAngle = currentStep.turnAngle - 25;
+                    state = WAITFORTURN;
+                    telemetry.addData("TURNING","TO BLOCKL");
+                    telemetry.update();
+                    initializeNavX(currentStep.turnAngle);
+                }
+                else if (block == BLOCKR){
+                    currentStep.turnAngle = currentStep.turnAngle + 5;
                     state = WAITFORTURN;
                     telemetry.addData("TURNING","TO BLOCKL");
                     telemetry.update();
@@ -891,9 +948,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             state = WAITFORRESETENCODERS;
         }
         else if (state == SPECVU){
-            double vuMoveExtra = convertDistance(4);
-            double vuMoveLess = convertDistance(6);
-
+            double vuMoveExtra = convertDistance(3);
+            double vuMoveLess = convertDistance(2);
             resetEncoders();
             initializeNavX(0);
             if (block == BLOCKR){
@@ -996,6 +1052,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     }
     @Override
     public void stop(){
+        navx_device.close();
         devuforia();
     }
 

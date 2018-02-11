@@ -26,9 +26,9 @@ public class AutoBlueCorner extends MechBaseAutoOp {
         steps.add(new Step(0, 0 , 0, StepType.VUFORIA, 0, BLUE));
         steps.add(new Step(0, 0 , 0, StepType.RAISEBLOCK, 0, BLUE));
         steps.add(new Step(1.2, 0.1 , 0.1, StepType.MOVEARM, 0, BLUE));
-        steps.add(new Step(-23, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
+        steps.add(new Step(-20, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
         steps.add(new Step(0, 0.1, 0.1, StepType.VUTURN, 35, BLUE));
-        steps.add(new Step(-6, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
+        steps.add(new Step(-12, -0.1 , -0.1, StepType.VUMOVE, 0, BLUE));
         steps.add(new Step(-26, -0.1 , -0.1, StepType.BLOCK, 0, BLUE));
         steps.add(new Step(7, 0.1 , 0.1, StepType.MOVE, 0, BLUE));
         steps.add(new Step(-9, -0.1 , -0.1, StepType.MOVE, 0, BLUE));

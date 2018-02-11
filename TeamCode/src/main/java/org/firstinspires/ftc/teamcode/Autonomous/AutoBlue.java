@@ -25,13 +25,15 @@ public class AutoBlue extends MechBaseAutoOp {
 
     @Override
     public void initSteps(){
-        steps.add(new Step(0, 0 , 0, StepType.GRABBLOCK, 0, RED));
+        steps.add(new Step(0, 0 , 0, StepType.GRABBLOCK, 0, BLUE));
         steps.add(new Step(0, 0 , 0, StepType.VUFORIA, 0, BLUE));
         steps.add(new Step(0, 0 , 0, StepType.RAISEBLOCK, 0, BLUE));
         steps.add(new Step(1.2, 0.1 , 0.1, StepType.MOVEARM, 0, BLUE));
-        steps.add(new Step(-31, -0.1 , -0.1, StepType.VUMOVE, 0, BLUE));
-        steps.add(new Step(0, 0.1, 0.1, StepType.LEFT, 90, BLUE));
-        steps.add(new Step(-7, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
+        steps.add(new Step(-20, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
+        steps.add(new Step(0, 0.1, 0.1, StepType.NEWVUTURN, 45, BLUE));
+        /*steps.add(new Step(-33, -0.1 , -0.1, StepType.VUMOVE, 0, BLUE));0
+        steps.add(new Step(0, 0.1, 0.1, StepType.RIGHT, 90, BLUE));*/
+        steps.add(new Step(-8, -0.1 , -0.1, StepType.VUMOVE, 0, BLUE));
         steps.add(new Step(-26, -0.1 , -0.1, StepType.BLOCK, 0, BLUE));
         steps.add(new Step(7, 0.1 , 0.1, StepType.MOVE, 0, BLUE));
         steps.add(new Step(-9, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
