@@ -74,18 +74,22 @@ public class MechWheelsOp extends OpMode {
     public Servo tlg;
     public Servo re;
     public Servo le;
+    public DcMotor extend;
+    public Servo relMov;
+    public Servo twist;
     public ColorSensor colorBlue;
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
     double rightposition = 1;
-    double leftposition = 0.05;
+    double leftposition = 0;
     double rightposition2 = 0;
     double leftposition2 = 0.64;
     double rightposition3 = 0.61;
     double leftposition3 = 0.79;
-    double rightposition4 = 0.16;
+    double rightposition4 = 0.3;
     double leftposition4 = 0.77;
+    double epos = 0;
     final static double FAST = 1.0;
     final static double MED_FAST = 0.75;
     final static double MEDIUM = 0.5;
@@ -94,7 +98,6 @@ public class MechWheelsOp extends OpMode {
     double mode = FAST;
     double upPos = 0;
     int targetPosittion = 0;
-
     double flapPosition = 1;
 
     public void init()
@@ -102,6 +105,7 @@ public class MechWheelsOp extends OpMode {
         lf  = hardwareMap.get(DcMotor.class, "lf");
         rf = hardwareMap.get(DcMotor.class, "rf");
         lb = hardwareMap.get(DcMotor.class, "lb");
+        extend = hardwareMap.get(DcMotor.class, "e");
         rb = hardwareMap.get(DcMotor.class, "rb");
         up = hardwareMap.get(DcMotor.class, "up");
         rg = hardwareMap.get(Servo.class, "rg");
@@ -113,9 +117,8 @@ public class MechWheelsOp extends OpMode {
         colorBlue = hardwareMap.get(ColorSensor.class, "cb");
         tlg = hardwareMap.get(Servo.class, "tlg");
         trg = hardwareMap.get(Servo.class, "trg");
-        //Slidy = hardwareMap.get(CRServo.class, "sc");
-        //rsg = hardwareMap.get(CRServo.class, "rsg");
-        //lsg = hardwareMap.get(CRServo.class, "lsg");
+        twist = hardwareMap.get(Servo.class, "t");
+        relMov = hardwareMap.get(Servo.class, "rm");
         re = hardwareMap.get(Servo.class, "re");
         le = hardwareMap.get(Servo.class, "le");
         rf.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -123,14 +126,15 @@ public class MechWheelsOp extends OpMode {
         //up.setDirection(DcMotorSimple.Direction.REVERSE);
         rjk.setPosition(rightposition2);
         ljk.setPosition(leftposition2);
-        lg.setPosition(0.9);
-        rg.setPosition(0.1);
+        lg.setPosition(1);
+        rg.setPosition(0.05);
         rjr.setPosition(rightposition3);
         ljr.setPosition(leftposition3);
         tlg.setPosition(leftposition);
-        trg.setPosition(rightposition);
+        trg.setPosition(rightposition)  ;
         re.setPosition(rightposition4);
         le.setPosition(leftposition4);
+        twist.setPosition(1);
     }
     @Override
     public void start(){
@@ -253,7 +257,7 @@ public class MechWheelsOp extends OpMode {
             lg.setPosition(0.09);
         }
         else if (gamepad2.left_trigger>0) {
-            rg.setPosition(0.1);
+            rg.setPosition(0.2);
             lg.setPosition(0.9);
         }
         if (gamepad2.right_bumper){
@@ -261,10 +265,10 @@ public class MechWheelsOp extends OpMode {
             tlg.setPosition(0.69);
         }
         else if (gamepad2.left_bumper){
-            trg.setPosition(rightposition);
-            tlg.setPosition(leftposition);
+            trg.setPosition(0.9);
+            tlg.setPosition(0.05);
         }
-        if (gamepad2.x){
+        if (gamepad2.right_stick_button){
             rg.setPosition(0.25);
             lg.setPosition(0.75);
             trg.setPosition(0.85);
@@ -283,16 +287,41 @@ public class MechWheelsOp extends OpMode {
             rsg.setPower(0);
             lsg.setPower(0);
         }*/
-        if (gamepad2.a){
-            re.setPosition(0.87);
+        if (gamepad2.dpad_down){
+            rg.setPosition(1);
+            lg.setPosition(0.09);
+            re.setPosition(1);
             le.setPosition(0.12);
+
         }
-        else if (gamepad2.y){
+        else if (gamepad2.dpad_up){
             re.setPosition(rightposition4);
             le.setPosition(leftposition4);
         }
+        if (gamepad2.a){
+            flapPosition = flapPosition - 0.01;
+            relMov.setPosition(flapPosition);
+        }
+        else if (gamepad2.y){
+            flapPosition = flapPosition + 0.01;
+            relMov.setPosition(flapPosition);
+        }
+        if (gamepad2.b){
+            twist.setPosition(0);
+        }
+        else if (gamepad2.x){
+            twist.setPosition(1);
+        }
+        else if (gamepad2.left_stick_button){
+            twist.setPosition(0.4);
+        }
+        epos = gamepad2.left_stick_y/2;
         upPos = gamepad2.right_stick_y;
+        extend.setPower(epos);
         up.setPower(upPos);
+        if (extend.getPower() == 0){
+
+        }
         telemetry.addData("color value blue", colorBlue.blue());
         telemetry.addData("color value red", colorBlue.red());
 

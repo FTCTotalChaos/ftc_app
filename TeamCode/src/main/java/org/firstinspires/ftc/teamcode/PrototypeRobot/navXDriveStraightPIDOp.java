@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.PrototypeRobot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.Autonomous.AutoBase;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.navx.ftc.navXPIDController;
  * to reduce the frequency of the updates to the drive system.
  */
 @Autonomous(name="StraightLineDrive", group="SDV")
+@Disabled
 public class navXDriveStraightPIDOp extends AutoBase {
     DcMotor backLeft;
     DcMotor backRight;
