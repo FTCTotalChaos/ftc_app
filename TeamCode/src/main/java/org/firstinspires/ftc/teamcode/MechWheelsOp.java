@@ -56,10 +56,10 @@ import com.qualcomm.robotcore.util.Range;
 @TeleOp(name = "Ghost", group = "Ghost")
 public class MechWheelsOp extends OpMode {
 
-    boolean iSawDpadUpAlready = false;
-    boolean iSawDpadDownAlready = false;
-    boolean iSawDpadUpAlready2 = false;
-    boolean iSawDpadDownAlready2 = false;
+    boolean sawRightBumper = false;
+    boolean sawLeftBumper = false;
+    boolean sawRightBumper2 = false;
+    boolean sawLeftBumper2 = false;
     public DcMotor rf;
     public DcMotor lf;
     public DcMotor rb;
@@ -81,8 +81,8 @@ public class MechWheelsOp extends OpMode {
     //public Servo rextention;
     //public Servo lextentions;
     public DcMotor up;
-    double rightposition = 1;
-    double leftposition = 0;
+    double rightposition = 0.86;
+    double leftposition = 0.08;
     double rightposition2 = 0;
     double leftposition2 = 0.64;
     double rightposition3 = 0.61;
@@ -126,8 +126,8 @@ public class MechWheelsOp extends OpMode {
         //up.setDirection(DcMotorSimple.Direction.REVERSE);
         rjk.setPosition(rightposition2);
         ljk.setPosition(leftposition2);
-        lg.setPosition(1);
-        rg.setPosition(0.05);
+        lg.setPosition(0.82);
+        rg.setPosition(0.2);
         rjr.setPosition(rightposition3);
         ljr.setPosition(leftposition3);
         tlg.setPosition(leftposition);
@@ -143,55 +143,27 @@ public class MechWheelsOp extends OpMode {
     @Override
     public void loop()
     {
-        // When dpad is pushed up increase one mode
-        //When dpad is pushed down decrease by one mode
+        // When right bumper is pushed up increase one mode
+        //When left bumper is pushed down decrease by one mode
         if (gamepad1.right_bumper) {
-            if(!iSawDpadUpAlready) {
-                iSawDpadUpAlready = true;
+            if(!sawRightBumper) {
+                sawRightBumper = true;
                 mode = mode + 0.25;
             }
         }
         else {
-            iSawDpadUpAlready = false;
+            sawRightBumper = false;
         }
 
         if (gamepad1.left_bumper) {
-            if(!iSawDpadDownAlready) {
-                iSawDpadDownAlready = true;
+            if(!sawLeftBumper) {
+                sawLeftBumper = true;
                 mode = mode - 0.25;
 
             }
         }
         else {
-            iSawDpadDownAlready = false;
-        }
-        if (gamepad1.dpad_up) {
-            if(!iSawDpadUpAlready2) {
-                iSawDpadUpAlready2 = true;
-                targetPosittion = targetPosittion + 100;
-                up.setTargetPosition(targetPosittion);
-                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                up.setPower(1);
-            }
-        }
-        else {
-            iSawDpadUpAlready2 = false;
-        }
-        if (gamepad1.dpad_down) {
-            if(!iSawDpadDownAlready2) {
-                iSawDpadDownAlready2 = true;
-                targetPosittion = targetPosittion - 100;
-                up.setTargetPosition(targetPosittion);
-                up.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                up.setPower(-1);
-            }
-        }
-        else {
-            iSawDpadDownAlready2 = false;
-        }
-        if (!up.isBusy()){
-            up.setPower(0);
-            up.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            sawLeftBumper = false;
         }
         if (gamepad1.left_trigger > 0){
             mode = 0.25;
@@ -243,7 +215,7 @@ public class MechWheelsOp extends OpMode {
             ljk.setPosition(leftposition2);
         }
         if (gamepad1.a){
-            rjk.setPosition(0);
+            rjk.setPosition(0.65);
         }
         if (gamepad1.x) {
             ljk.setPosition(0);
@@ -253,43 +225,30 @@ public class MechWheelsOp extends OpMode {
             ljr.setPosition(leftposition3);
         }
         if (gamepad2.right_trigger>0) {
-            rg.setPosition(1);
-            lg.setPosition(0.09);
+            rg.setPosition(0.72);
+            lg.setPosition(0.08);
         }
         else if (gamepad2.left_trigger>0) {
-            rg.setPosition(0.2);
-            lg.setPosition(0.9);
+            rg.setPosition(0.4);
+            lg.setPosition(0.62);
         }
         if (gamepad2.right_bumper){
-            trg.setPosition(0.4);
-            tlg.setPosition(0.69);
+            trg.setPosition(0.27);
+            tlg.setPosition(0.88);
         }
         else if (gamepad2.left_bumper){
-            trg.setPosition(0.9);
-            tlg.setPosition(0.05);
+            trg.setPosition(0.66);
+            tlg.setPosition(0.28);
         }
         if (gamepad2.right_stick_button){
-            rg.setPosition(0.25);
-            lg.setPosition(0.75);
-            trg.setPosition(0.85);
-            tlg.setPosition(0.25);
+            rg.setPosition(0.45);
+            lg.setPosition(0.4);
+            trg.setPosition(0.55);
+            tlg.setPosition(0.5);
         }
-
-        /*if (gamepad2.right_trigger > 0){
-            rsg.setPower(0.5);
-            lsg.setPower(-0.5);
-        }
-        else if (gamepad2.left_trigger > 0){
-            rsg.setPower(-0.5);
-            lsg.setPower(0.5);
-        }
-        else{
-            rsg.setPower(0);
-            lsg.setPower(0);
-        }*/
         if (gamepad2.dpad_down){
-            rg.setPosition(1);
-            lg.setPosition(0.09);
+            rg.setPosition(0.9);
+            lg.setPosition(0.08);
             re.setPosition(1);
             le.setPosition(0.12);
 

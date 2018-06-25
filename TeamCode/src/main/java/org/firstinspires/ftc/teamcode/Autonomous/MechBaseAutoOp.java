@@ -53,13 +53,13 @@ public abstract class MechBaseAutoOp extends OpMode {
     Servo tlg;
     Servo re;
     Servo le;
-    double rightposition = 1;
-    double leftposition = 0.15;
+    double rightposition = 0.86;
+    double leftposition = 0.08;
     double rightposition2 = 0;
-    double leftposition2 = 0.64;
+    double leftposition2 = 0.8;
     double rightposition3 = 0.61;
     double leftposition3 = 0.79;
-    double rightposition4 = 0.16;
+    double rightposition4 = 0.3;
     double leftposition4 = 0.77;
     double positionRed = rightposition3;
     double positionBlue = leftposition3;
@@ -113,7 +113,7 @@ public abstract class MechBaseAutoOp extends OpMode {
     final static int WAITFORTOUCH = 17;
     final static int NEWSPECTURN = 19;
     final static int GRAB = 18;
-    final static int LOWER = 19;
+    final static int LOWER = 20;
     int state = ATREST;
     final static int ENCODER_CPR = 1120;
     final static double GEAR_RATIO = 0.5;
@@ -314,8 +314,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             up.setDirection(DcMotorSimple.Direction.REVERSE);
             rjk.setPosition(rightposition2);
             ljk.setPosition(leftposition2);
-            lg.setPosition(0.9);
-            rg.setPosition(0.1);
+            lg.setPosition(0.82);
+            rg.setPosition(0.04);
             rjr.setPosition(rightposition3);
             ljr.setPosition(leftposition3);
             tlg.setPosition(leftposition);
@@ -371,8 +371,6 @@ public abstract class MechBaseAutoOp extends OpMode {
         int count = 0;
         rg.setPosition(1);
         lg.setPosition(0.09);
-        trg.setPosition(0.4);
-        tlg.setPosition(0.69);
     }
     @Override
     public void loop() {
@@ -550,7 +548,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                 }
             }
             else if (currentStep.colorType == BLUE) {
-                ljk.setPosition(0.25);
+                ljk.setPosition(0.1);
                 setMotorPower(-0.01, -0.01, -0.01, -0.01);
                 if (touchBlue.isPressed()) {
                     setMotorPower(0, 0, 0, 0);
@@ -730,7 +728,7 @@ public abstract class MechBaseAutoOp extends OpMode {
             }
         }
         else if (state == LOWER){
-            if (counter < 125) {
+            if (counter < 100) {
                 counter++;
             }
             else {
@@ -758,7 +756,7 @@ public abstract class MechBaseAutoOp extends OpMode {
                 nextStep();
             }
             else{
-                telemetry.addData("Not getting anything worthless trash color sensor", "");
+                telemetry.addData("Not getting anything", "");
                 counter++;
                 if(counter < 100 && currentStep.colorType == RED){
                     positionRed = positionRed - 0.001;
@@ -972,8 +970,8 @@ public abstract class MechBaseAutoOp extends OpMode {
             state = WAITFORRESETENCODERS;
         }
         else if (state == SPECVU){
-            double vuMoveExtra = convertDistance(14);
-            double vuMoveLess = convertDistance(9);
+            double vuMoveExtra = convertDistance(6.5);
+            double vuMoveLess = convertDistance(3.5);
             resetEncoders();
             initializeNavX(0);
             if (block == BLOCKR){

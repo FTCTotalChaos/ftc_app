@@ -26,14 +26,14 @@ public class AutoRedCorner extends MechBaseAutoOp {
         steps.add(new Step(0, 0 , 0, StepType.VUFORIA, 0, RED));
         steps.add(new Step(0, 0 , 0, StepType.RAISEBLOCK, 0, RED));
         steps.add(new Step(1.2, 0.1 , 0.1, StepType.MOVEARM, 0, RED));
-        steps.add(new Step(-23, -0.1 , -0.1, StepType.MOVE, 0, RED));
-        steps.add(new Step(0, 0.1, 0.1, StepType.LEFT, 90, RED));
-        steps.add(new Step(-2, -0.1, -0.1, StepType.VUMOVE, 40, RED));
+        steps.add(new Step(-19, -0.1 , -0.1, StepType.MOVE, 0, RED));
+        steps.add(new Step(0, 0.05, 0.05, StepType.LEFT, 90, RED));
+        steps.add(new Step(0, -0.1, -0.1, StepType.VUMOVE, 40, RED));
         steps.add(new Step(-5, 0.1, 0.1, StepType.GOTUTOUCH, 0, RED));
-        steps.add(new Step(0, 0.1, 0.1, StepType.RIGHT, 75, RED));
+        steps.add(new Step(0, 0.05, 0.05, StepType.RIGHT, 75, RED));
         steps.add(new Step(0, 0 , 0, StepType.LOWBLOCK, 0, RED));
         steps.add(new Step(-26, -0.1 , -0.1, StepType.BLOCK, 0, RED));
-        steps.add(new Step(-4, -0.1 , -0.1, StepType.MOVE, 0, RED));
-        steps.add(new Step(3, 0.1 , 0.1, StepType.MOVE, 0, RED));
+        steps.add(new Step(-6, -0.1 , -0.1, StepType.MOVE, 0, RED));
+        steps.add(new Step(2, 0.1 , 0.1, StepType.MOVE, 0, RED));
     }
 }

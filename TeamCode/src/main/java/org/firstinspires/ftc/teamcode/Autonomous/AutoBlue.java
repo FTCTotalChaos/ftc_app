@@ -31,12 +31,13 @@ public class AutoBlue extends MechBaseAutoOp {
         steps.add(new Step(1.2, 0.1 , 0.1, StepType.MOVEARM, 0, BLUE));
         steps.add(new Step(-19, -0.1 , -0.1, StepType.VUMOVE, 0, BLUE));
         steps.add(new Step(-5, 0.1, 0.1, StepType.GOTUTOUCH, 40, BLUE));
-        steps.add(new Step(0, 0.075, 0.075, StepType.LEFT, 75, BLUE));
+        steps.add(new Step(0, 0.05, 0.05, StepType.LEFT, 75, BLUE));
         steps.add(new Step(0, 0 , 0, StepType.LOWBLOCK, 0, BLUE));
         steps.add(new Step(-26, -0.1 , -0.1, StepType.BLOCK, 0, BLUE));
         steps.add(new Step(-6, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
         steps.add(new Step(4, 0.1 , 0.1, StepType.MOVE, 0, BLUE));
-
+        steps.add(new Step(-7, -0.1 , -0.1, StepType.MOVE, 0, BLUE));
+        steps.add(new Step(4, 0.1 , 0.1, StepType.MOVE, 0, BLUE));
 
 
     }
